@@ -3,9 +3,8 @@
 **Module M1 of the optional tutoring track.**
 
 `M1_continuum.ipynb` — numpy and matplotlib, **plus sympy** for the compatibility demo in
-§6. Sympy ships with Colab and with any standard scientific Python. The slider in §1 uses
-`ipywidgets` where it is available and falls back to a static figure where it is not.
-Nothing else is needed: no install, no bootstrap cell.
+§6. Sympy ships with Colab and with any standard scientific Python. Nothing else is
+needed: no install, no bootstrap cell.
 
 ## Contents
 

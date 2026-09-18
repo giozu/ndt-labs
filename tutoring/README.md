@@ -15,8 +15,7 @@ This repository currently holds the first.
 
 The notebook needs no install. It is plain Python (numpy, matplotlib, scipy): no
 bootstrap cell, nothing to set up. It runs on a bare Colab runtime or on any local
-Python. The slider in section 1 uses `ipywidgets` where that is available, and falls
-back to a static figure where it is not.
+Python.
 
 ## The required background: Ye
 
