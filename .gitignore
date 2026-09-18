@@ -1,0 +1,30 @@
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# z3st run products — regenerate them, never commit them
+mesh.msh
+output/
+log_mesh.md
+log_z3st.md
+*.vtu
+*.pvd
+*.h5
+*.xdmf
+
+# fetched by the notebooks at run time
+ndt_setup.py
+
+# The project material is distributed when the project block starts, not from here.
+cases/
+sessions/
+launcher/
+
+# a group's own working folder (ndt_setup.workdir), created at run time
+ndt-work/
+
+# Only the published module is tracked. The rest of the track is written and lives in
+# the working copy; each folder is added here when its module goes out.
+tutoring/*
+!tutoring/README.md
+!tutoring/M1_continuum/

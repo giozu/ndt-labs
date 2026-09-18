@@ -1,0 +1,41 @@
+# Licence
+
+Copyright 2026 Giovanni Zullo, Politecnico di Milano.
+All rights reserved **except as granted below**.
+
+This repository holds two different kinds of work, and they carry two different
+licences. Nothing here is unlicensed.
+
+## Software — Apache License 2.0
+
+Full text: [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt)
+
+Applies to:
+
+- every `.py` file, and the code cells of the notebooks;
+- the z3st case definitions (`.yaml`, `.geo`) and their run scripts, where they are
+  distributed.
+
+Same licence as [z3st](https://github.com/giozu/z3st), which this material runs on,
+so the two repositories can be read and reused under one rule.
+
+## Teaching material — CC BY-NC 4.0
+
+Notice and links: [`LICENSES/CC-BY-NC-4.0.txt`](LICENSES/CC-BY-NC-4.0.txt)
+
+Applies to everything else: the notebooks and all the prose, the `README.md` files
+included.
+
+Credit the author, link back, say what you changed, and do not sell it. Teaching a
+course from it is the intended use.
+
+## The one place the split is awkward
+
+A notebook is teaching material that contains code. To remove any doubt: **the code
+cells inside the notebooks may also be used under Apache-2.0**, on the same terms as
+the `.py` files. Take a function you need without wondering which licence follows it.
+
+## Not in this repository
+
+Reference solutions and anything related to grading are not published here, under
+any licence.
