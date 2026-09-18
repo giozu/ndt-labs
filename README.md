@@ -18,7 +18,7 @@ The modules are **plain Python**. No install, no environment to build, no Google
 
 ## Getting help
 
-Issues and pull requests are disabled on this repository. Bring problems to the session, or email the TA, and always include the **full output of the cell that failed**, not a screenshot of the last line.
+Issues and pull requests are disabled on this repository. Bring problems to the tutoring, or email the TA, and always include the **full output of the cell that failed**, not a screenshot of the last line.
 
 ## Note
 

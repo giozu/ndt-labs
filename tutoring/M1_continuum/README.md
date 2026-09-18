@@ -1,39 +1,42 @@
-# M1 — Continuum mechanics in practice
+# M1 — Fundamentals of continuum mechanics
 
-**Module M1 of the optional pre-course. 2.5 hours.**
+**Module M1 of the optional tutoring track.**
 
-`M1_continuum.ipynb` — numpy/matplotlib **plus sympy** (only for the compatibility demo;
-sympy ships with Colab and with the z3st environment).
+`M1_continuum.ipynb` — numpy and matplotlib, **plus sympy** for the compatibility demo in
+§6. Sympy ships with Colab and with any standard scientific Python. The slider in §1 uses
+`ipywidgets` where it is available and falls back to a static figure where it is not.
+Nothing else is needed: no install, no bootstrap cell.
 
 ## Contents
 
-1. Traction and the Cauchy tensor; index notation; why σ is symmetric
+1. Traction and the Cauchy tensor — the two laws of Cauchy, the tetrahedron, index
+   notation, and why σ is symmetric
 2. Equilibrium, and why three equations can never determine six unknowns
 3. Principal stresses, invariants, and what "invariant" buys you
-4. Mohr's circles — **sampled**, not drawn: 20 000 random planes land in the predicted
-   region, and τ_max = (σ₁−σ₃)/2 comes out of the samples
-5. Hydrostatic / deviatoric split; J₂ and where von Mises comes from
+4. Mohr's circles; τ_max = (σ₁ − σ₃)/2
+5. Hydrostatic and deviatoric parts; J₂ and where von Mises comes from
 6. Small strain, and what compatibility actually means
-7. Six exercises
+7. Saint-Venant's principle, and the one place it fails
+8. Six exercises
 
-## Builds towards
+## What it produces
 
-Everything. Luzzi opens with ~4 h of continuum-mechanics recalls and moves fast; this is
-the operational subset needed to keep up.
+Executed end to end with zero errors. The numbers it prints, for the record:
 
-## Notes for the TA
+| | |
+|---|---|
+| neutral stress state | σ = [[120, 45, −20], [45, −60, 30], [−20, 30, 80]] MPa |
+| principal stresses | 133.89, 84.00, −77.89 MPa |
+| invariants | I₁ = 140, I₂ = −5725, I₃ = −876000 |
+| τ_max, from 20 000 sampled planes and from (σ₁−σ₃)/2 | 105.89 MPa, both |
+| mean normal stress | σ_m = 46.67 MPa, so a pressure of −46.67 MPa |
+| von Mises, from J₂ and from the principal stresses | 191.77 MPa, both |
+| Tresca, and the ratio to von Mises | 211.79 MPa, 1.1044 (bounded by 2/√3 = 1.1547) |
+| stress concentration at a circular hole | K_t = 3.00, at any hole size |
 
-- §4 is the section to protect. τ_max = (σ₁−σ₃)/2 **depends only on the largest and
-  smallest** principal stresses — the intermediate one is irrelevant. That single fact is
-  the Tresca criterion, and therefore the ASME stress intensity. Students who internalise
-  it here will not be puzzled by "S.I. = σ₁ − σ₃" in December.
-- The Mohr section deliberately samples random planes rather than plotting the closed-form
-  circles: the point is that the region is a *consequence*, not a definition.
-- §6 sets up the thermal-stress module: "plane sections remain plane" is a
-  compatibility condition, and
-  that restriction is what generates thermal stress. Compatibility is half the physics,
-  not bookkeeping.
-- The compatibility cell contrasts a strain field derived from a real displacement
-  (residual 0) with an invented one (residual 4).
+## Background reading
 
-All 5 code cells were executed and verified on 2026-07-31.
+Ye, *Structural and Stress Analysis*: chapter **1** (forces, stress, strain, Hooke),
+chapter **7** (two-dimensional stress and Mohr's circle) and **8.1** (strain
+transformation). Section 7 of the notebook is his **2.7**. Chapters **4** and **8.2**,
+beam diagrams and strain gauges, are reading only.
