@@ -15,7 +15,7 @@ needed: no install, no bootstrap cell.
 4. Mohr's circles; τ_max = (σ₁ − σ₃)/2
 5. Hydrostatic and deviatoric parts; J₂ and where von Mises comes from
 6. Small strain, and what compatibility actually means
-7. Saint-Venant's principle, and the one place it fails
+7. Saint-Venant's principle, and what it does not cover
 8. Six exercises
 
 ## What it produces
