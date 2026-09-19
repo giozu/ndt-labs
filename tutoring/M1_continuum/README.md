@@ -8,14 +8,15 @@ needed: no install, no bootstrap cell.
 
 ## Contents
 
-1. Traction and the Cauchy tensor: the two laws of Cauchy, the tetrahedron, index
-   notation, and why σ is symmetric
-2. Equilibrium, and why three equations can never determine six unknowns
+1. Traction and the Cauchy tensor: the two laws of Cauchy, index notation, the
+   tetrahedron
+2. Equilibrium equations: moments and the symmetry of σ, then forces, and why three
+   equations can never determine six unknowns
 3. Principal stresses, invariants, and what "invariant" buys you
-4. Mohr's circles; τ_max = (σ₁ − σ₃)/2
-5. Hydrostatic and deviatoric parts; J₂ and where von Mises comes from
+4. Hydrostatic and deviatoric parts; J₂ and where von Mises comes from
+5. Mohr's circles; τ_max = (σ₁ − σ₃)/2
 6. Small strain, and what compatibility actually means
-7. Saint-Venant's principle, and what it does not cover
+7. Saint-Venant's principle, and the one place it does not reach
 8. Six exercises
 
 ## What it produces

@@ -15,6 +15,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+from matplotlib.patches import FancyArrowPatch, Polygon
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 NOTES = os.environ.get("NDT_COURSE_NOTES_FIGURES", "")
@@ -268,24 +269,215 @@ def moment_balance(ax):
     ax.set_aspect('equal'); ax.axis('off')
 
 
-def equilibrium_from_svg(width=820):
-    """Turn the section-2 SVG into the PNG the notebook embeds.
+# --------------------------------------------------------------------------------
+# Shared machinery for the two axonometric cube drawings below.
+#
+# 01_stress_transformation redraws, from scratch, the same statement as the figure
+# "Stress transformation 3D" on Wikipedia: nothing is copied, the drawing is ours, and
+# the palette is the one a reader coming from that article will recognise.
+_U = np.array([[-0.56, 1.00, 0.00],
+               [-0.40, -0.22, 1.00]])
+_pr = lambda v: _U @ np.asarray(v, float)
+_W = np.cross(_U[0], _U[1])                    # points towards the viewer
+_FACE = ('#E66C4C', '#FDEA87', '#FA9E39')      # the faces normal to e_1, e_2, e_3
+_RED, _BLUE = '#FF3030', '#317DAF'
 
-    That figure is not drawn here: it is 01_equilibrium-3d-cartesian.svg, by Pantelis
-    Liolios (pantelisliolios.com), with the author's mark moved from the drawing to the
-    caption in the notebook. cairosvg is needed for nothing else, so the import is local
-    and the step is skipped when it is missing.
+
+def _cube(ax, keep, o, B, h, prime=False, fs=9.5, arr=0.52):
+    """A cube centred on o, its own axes the rows of B, carrying sigma_kj on each
+    visible face: three arrows from the face centre along e_1, e_2, e_3."""
+    o = np.asarray(o, float); B = np.asarray(B, float)
+    sg = [(a, b, c) for a in (-1, 1) for b in (-1, 1) for c in (-1, 1)]
+    V = [o + h*(s[0]*B[0] + s[1]*B[1] + s[2]*B[2]) for s in sg]
+    keep(*[_pr(v) for v in V])
+    for k in range(3):
+        for s in (+1, -1):
+            if (s*B[k]) @ _W <= 0:             # facing away: not drawn
+                continue
+            idx = [i for i, t in enumerate(sg) if t[k] == s]
+            ctr = _pr(o + s*h*B[k])
+            idx.sort(key=lambda i: np.arctan2(*(_pr(V[i]) - ctr)[::-1]))
+            ax.add_patch(Polygon([_pr(V[i]) for i in idx], closed=True,
+                                 fc=_FACE[k], ec='k', lw=1.3, zorder=3))
+    back = int(np.argmin([v @ _W for v in V]))
+    for a in range(8):
+        for b in range(a + 1, 8):
+            if sum(x != y for x, y in zip(sg[a], sg[b])) == 1 and back in (a, b):
+                ax.plot(*np.c_[_pr(V[a]), _pr(V[b])], '--', color='0.5', lw=0.8, zorder=2)
+    m = "'" if prime else ""
+    for k in range(3):
+        if B[k] @ _W <= 0:
+            continue
+        c0 = o + h*B[k]
+        for j in range(3):
+            tip = c0 + arr*h*B[j]
+            ax.annotate('', xy=_pr(tip), xytext=_pr(c0), zorder=6,
+                        arrowprops=dict(arrowstyle='-|>', color='k', lw=1.4,
+                                        shrinkA=0, shrinkB=0, mutation_scale=11))
+            d = _pr(tip) - _pr(c0); d /= np.linalg.norm(d)
+            perp = np.array([-d[1], d[0]])
+            if perp @ (_pr(c0) - _pr(o)) < 0:  # push the label away from the body
+                perp = -perp
+            q = _pr(tip) + 0.20*d + 0.17*perp
+            keep(q)
+            ax.text(*q, rf"$\sigma{m}_{{{k+1}{j+1}}}$", fontsize=fs, ha='center',
+                    va='center', zorder=7,
+                    bbox=dict(fc='white', ec='none', alpha=0.82, pad=0.4))
+
+
+def _triad(ax, keep, L, B, colour, names, fs=13, lw=1.5):
+    for k in range(3):
+        p = _pr(L*np.asarray(B)[k]); keep(p, p*1.17)
+        ax.annotate('', xy=p, xytext=(0, 0), zorder=4,
+                    arrowprops=dict(arrowstyle='-|>', color=colour, lw=lw,
+                                    shrinkA=0, shrinkB=0, mutation_scale=13))
+        ax.text(*(p*1.12), names[k], color=colour, fontsize=fs,
+                ha='center', va='center', zorder=8)
+
+
+def _arc(ax, keep, u, v, r, label, fs=11.5, off=0.30, rad=0.30):
+    """A double-headed arc between two axes, labelled with its direction cosine."""
+    a, b = _pr(r*np.asarray(u)), _pr(r*np.asarray(v))
+    ax.add_patch(FancyArrowPatch(a, b, connectionstyle=f'arc3,rad={rad}',
+                                 arrowstyle='<|-|>', mutation_scale=10,
+                                 color=_BLUE, lw=1.2, zorder=5, shrinkA=0, shrinkB=0))
+    # arc3 puts the control point at mid + rad*perp, so the curve's midpoint is at
+    # mid + rad/2*perp; every arc here is centred on the origin, so the label is
+    # pushed radially outwards from there
+    mid = 0.5*(a + b); perp = np.array([-(b - a)[1], (b - a)[0]])
+    cmid = mid + 0.5*rad*perp
+    q = cmid*(1 + off/np.linalg.norm(cmid)); keep(q)
+    ax.text(*q, label, color='k', fontsize=fs, ha='center', va='center', zorder=8,
+            bbox=dict(fc='white', ec='none', alpha=0.85, pad=0.5))
+
+
+def _primed_basis(t=0.45, s=0.60):
+    """A rotated orthonormal triad, chosen for how it reads on the page: x'_3 above and
+    right of x_3, x'_1 above x_1, x'_2 below x_2. Orthonormal and right-handed."""
+    I = np.eye(3)
+    n = lambda v: v/np.linalg.norm(v)
+    e3 = n(I[2] + t*I[1])
+    e1 = n(I[0] + s*I[2]); e1 = n(e1 - (e1 @ e3)*e3)
+    return np.array([e1, np.cross(e3, e1), e3])
+
+
+def stress_transformation(ax_a, ax_b):
+    """The same nine components seen from two orthogonal frames.
+
+    Left: sigma_ij in (x_1, x_2, x_3), the first index naming the face. Right: the same
+    state read in a rotated frame, with the direction cosines a_ij = e'_i . e_j that
+    carry one into the other through sigma' = Q sigma Q^T.
     """
-    svg = os.path.join(HERE, "01_equilibrium-3d-cartesian.svg")
-    if not os.path.isfile(svg):
-        return
-    try:
-        import cairosvg
-    except ImportError:
-        print("cairosvg not installed: 01_equilibrium_3d.png left untouched")
-        return
-    cairosvg.svg2png(url=svg, write_to=os.path.join(HERE, "01_equilibrium_3d.png"),
-                     output_width=width, background_color="white")
+    I = np.eye(3)
+    for ax, build in ((ax_a, 'a'), (ax_b, 'b')):
+        pts = []
+        keep = lambda *p: pts.extend(np.asarray(q, float) for q in p)
+        if build == 'a':
+            _triad(ax, keep, 3.2, I, 'k', ('$x_1$', '$x_2$', '$x_3$'))
+            _cube(ax, keep, [-0.30, 1.95, 1.60], I, 1.10, fs=10)
+        else:
+            Q = _primed_basis()
+            _triad(ax, keep, 2.7, I, 'k', ('$x_1$', '$x_2$', '$x_3$'), fs=12, lw=1.2)
+            _triad(ax, keep, 3.0, Q, _RED, ("$x'_1$", "$x'_2$", "$x'_3$"), fs=13, lw=1.7)
+            _arc(ax, keep, Q[0], I[2], 1.85, r'$\cos^{-1}a_{13}$')
+            _arc(ax, keep, I[2], Q[2], 1.70, r'$\cos^{-1}a_{33}$', off=0.95)
+            _arc(ax, keep, I[0], Q[1], 1.85, r'$\cos^{-1}a_{21}$')
+            _cube(ax, keep, 3.1*Q[1] + 3.0*Q[2] - 0.6*Q[0], Q, 1.10, prime=True, fs=9.5)
+        P = np.array(pts)
+        ax.set_xlim(P[:, 0].min() - 0.35, P[:, 0].max() + 0.35)
+        ax.set_ylim(P[:, 1].min() - 0.35, P[:, 1].max() + 0.35)
+        ax.set_aspect('equal'); ax.axis('off')
+
+
+def equilibrium_cube(ax, h=1.0):
+    """The six faces of an element, and why opposite faces do not cancel.
+
+    Each face carries sigma_kj, the index j left free exactly as the text writes it.
+    The three faces at +dx_k/2 are drawn solid and tinted and carry the value at the
+    far face; the three at -dx_k/2 are dashed and carry sigma_kj itself. The difference
+    between the two, per unit length, is the derivative in the equilibrium equations.
+    """
+    COL = ('#C1272D', '#1E8449', '#1F5FA8')       # components on faces 1, 2, 3
+    BODY = '#8E44AD'
+    I = np.eye(3)
+    pts = []
+    keep = lambda *p: pts.extend(np.asarray(q, float) for q in p)
+
+    sg = [(a, b, c) for a in (-1, 1) for b in (-1, 1) for c in (-1, 1)]
+    V = [h*np.array(t, float) for t in sg]
+    keep(*[_pr(v) for v in V])
+    for k in range(3):                             # a light tint on the visible faces
+        if I[k] @ _W <= 0:
+            continue
+        idx = [i for i, t in enumerate(sg) if t[k] == 1]
+        c2 = _pr(h*I[k])
+        idx.sort(key=lambda i: np.arctan2(*(_pr(V[i]) - c2)[::-1]))
+        ax.add_patch(Polygon([_pr(V[i]) for i in idx], closed=True, fc=COL[k],
+                             ec='none', alpha=0.10, zorder=0))
+    back = int(np.argmin([v @ _W for v in V]))
+    for a in range(8):
+        for b in range(a + 1, 8):
+            if sum(x != y for x, y in zip(sg[a], sg[b])) == 1:
+                hid = back in (a, b)
+                ax.plot(*np.c_[_pr(V[a]), _pr(V[b])], '--' if hid else '-',
+                        color='0.55' if hid else 'k', lw=0.9 if hid else 1.4,
+                        zorder=1 if hid else 4)
+
+    for k in range(3):
+        for s_ in (+1, -1):
+            ctr = s_*h*I[k]
+            vis = (s_*I[k]) @ _W > 0
+            ax.plot(*_pr(ctr), 'o', color=COL[k], ms=3.5, zorder=6)
+            for j in range(3):
+                tip = ctr + 0.62*h*I[j]
+                ax.annotate('', xy=_pr(tip), xytext=_pr(ctr), zorder=6,
+                            arrowprops=dict(arrowstyle='-|>', color=COL[k],
+                                            lw=1.5 if vis else 1.0,
+                                            alpha=1.0 if vis else 0.55,
+                                            linestyle='-' if vis else (0, (3, 2)),
+                                            shrinkA=0, shrinkB=0, mutation_scale=10))
+            anchor = _pr(ctr); out = anchor/np.linalg.norm(anchor)
+            if vis:
+                lab = (rf"$\sigma_{{{k+1}j}}+\dfrac{{\partial\sigma_{{{k+1}j}}}}"
+                       rf"{{\partial x_{k+1}}}\,dx_{k+1}$")
+                q = anchor + 1.45*out
+                ax.annotate('', xy=q, xytext=anchor, zorder=2,
+                            arrowprops=dict(arrowstyle='-', color=COL[k], lw=0.8,
+                                            alpha=0.65, shrinkA=5, shrinkB=5))
+                fs = 11
+            else:
+                lab, q, fs = rf"$\sigma_{{{k+1}j}}$", anchor + 0.30*out, 12
+            keep(q, q + 0.8*out)
+            ax.text(*q, lab, color=COL[k], fontsize=fs, ha='center', va='center',
+                    zorder=7, bbox=dict(fc='white', ec='none', alpha=0.9, pad=1.0))
+
+    # the body force: one vector through the centre, not three, so that it does not
+    # compete with the face triads for the middle of the drawing
+    d3 = np.array([0.45, 0.30, 0.62]); d3 /= np.linalg.norm(d3)
+    tip = 0.62*h*d3
+    ax.annotate('', xy=_pr(tip), xytext=(0, 0), zorder=8,
+                arrowprops=dict(arrowstyle='-|>', color=BODY, lw=2.0,
+                                shrinkA=0, shrinkB=0, mutation_scale=12))
+    d = _pr(tip)/np.linalg.norm(_pr(tip))
+    ax.text(*(_pr(tip) + 0.24*d), r"$\mathbf{b}$", color=BODY, fontsize=12,
+            ha='center', va='center', zorder=9,
+            bbox=dict(fc='white', ec='none', alpha=0.85, pad=0.4))
+
+    org = np.array([-2.6, -1.9])                   # a detached orientation triad
+    for j, nm in enumerate(('$x_1$', '$x_2$', '$x_3$')):
+        t2 = org + 0.72*_pr(I[j])
+        ax.annotate('', xy=t2, xytext=org, zorder=8,
+                    arrowprops=dict(arrowstyle='-|>', color='k', lw=1.2,
+                                    shrinkA=0, shrinkB=0, mutation_scale=10))
+        d = (t2 - org)/np.linalg.norm(t2 - org)
+        keep(t2 + 0.45*d)
+        ax.text(*(t2 + 0.22*d), nm, fontsize=11, ha='center', va='center', zorder=9)
+    keep(org)
+
+    P = np.array(pts)
+    ax.set_xlim(P[:, 0].min() - 0.5, P[:, 0].max() + 0.5)
+    ax.set_ylim(P[:, 1].min() - 0.4, P[:, 1].max() + 0.4)
+    ax.set_aspect('equal'); ax.axis('off')
 
 
 def main():
@@ -306,7 +498,15 @@ def main():
     fig.tight_layout()
     save(fig, "01_stress_cube")
 
-    equilibrium_from_svg()
+    fig, (a, b) = plt.subplots(1, 2, figsize=(13.2, 5.8))
+    stress_transformation(a, b)
+    fig.tight_layout()
+    save(fig, "01_stress_transformation")
+
+    fig, ax = plt.subplots(figsize=(9.2, 6.4))
+    equilibrium_cube(ax)
+    fig.tight_layout()
+    save(fig, "01_equilibrium_cube")
 
     print("written:", ", ".join(sorted(f for f in os.listdir(HERE)
                                        if f.endswith(".png"))))
