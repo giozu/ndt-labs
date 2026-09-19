@@ -1,14 +1,14 @@
-# M1 — Fundamentals of continuum mechanics
+# M1 - Fundamentals of continuum mechanics
 
 **Module M1 of the optional tutoring track.**
 
-`M1_continuum.ipynb` — numpy and matplotlib, **plus sympy** for the compatibility demo in
+`M1_continuum.ipynb`: numpy and matplotlib, **plus sympy** for the compatibility demo in
 §6. Sympy ships with Colab and with any standard scientific Python. Nothing else is
 needed: no install, no bootstrap cell.
 
 ## Contents
 
-1. Traction and the Cauchy tensor — the two laws of Cauchy, the tetrahedron, index
+1. Traction and the Cauchy tensor: the two laws of Cauchy, the tetrahedron, index
    notation, and why σ is symmetric
 2. Equilibrium, and why three equations can never determine six unknowns
 3. Principal stresses, invariants, and what "invariant" buys you

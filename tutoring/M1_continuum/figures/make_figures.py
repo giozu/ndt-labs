@@ -230,12 +230,14 @@ def stress_cube(ax):
                     ha='center', va='center', zorder=6,
                     bbox=dict(fc='white', ec='none', alpha=0.9, pad=0.8))
 
-    for k, lab in enumerate(('$x$', '$y$', '$z$')):
+    # the normal stress on face k points along +e_k, i.e. along the axis itself, so the
+    # axis label has to be pushed clear of it
+    for k, lab in enumerate(('$x_1$', '$x_2$', '$x_3$')):
         e = I[k]
-        p = pr(2.5*e)
+        p = pr(2.75*e)
         ax.annotate('', xy=p, xytext=pr(1.7*e), zorder=1,
                     arrowprops=dict(arrowstyle='-|>', color='k', lw=1.0))
-        ax.text(*(p*1.10), lab, fontsize=12, ha='center', va='center')
+        ax.text(*(p*1.16), lab, fontsize=12, ha='center', va='center')
 
     pts = np.array([pr(v) for v in c] + [pr(2.9*I[k]) for k in range(3)]
                    + [pr(I[k]*h + I[(k + m) % 3]*1.3) for k in range(3) for m in range(3)])
@@ -249,21 +251,41 @@ def moment_balance(ax):
     a = 1.0
     ax.plot([-a, a, a, -a, -a], [-a, -a, a, a, -a], 'k', lw=1.4)
     for (x0, y0, dx, dy, lab, lp) in [
-            ( a,  0,  0,  0.75, r'$\tau_{xy}$', ( a+0.30,  0.45)),
-            (-a,  0,  0, -0.75, r'$\tau_{xy}$', (-a-0.36, -0.50)),
-            ( 0,  a,  0.75, 0,  r'$\tau_{yx}$', ( 0.45,  a+0.28)),
-            ( 0, -a, -0.75, 0,  r'$\tau_{yx}$', (-0.50, -a-0.32))]:
+            ( a,  0,  0,  0.75, r'$\tau_{12}$', ( a+0.30,  0.45)),
+            (-a,  0,  0, -0.75, r'$\tau_{12}$', (-a-0.36, -0.50)),
+            ( 0,  a,  0.75, 0,  r'$\tau_{21}$', ( 0.45,  a+0.28)),
+            ( 0, -a, -0.75, 0,  r'$\tau_{21}$', (-0.50, -a-0.32))]:
         ax.annotate('', xy=(x0+dx, y0+dy), xytext=(x0, y0),
                     arrowprops=dict(arrowstyle='-|>', color='C0', lw=2.0))
         ax.text(*lp, lab, color='C0', fontsize=13, ha='center', va='center')
     ax.annotate('', xy=(a, -a - 0.78), xytext=(-a, -a - 0.78),
                 arrowprops=dict(arrowstyle='<->', color='0.5', lw=0.9))
-    ax.text(0, -a - 1.08, r'$dx$', fontsize=11, ha='center', color='0.35')
+    ax.text(0, -a - 1.08, r'$dx_1$', fontsize=11, ha='center', color='0.35')
     ax.annotate('', xy=(-a - 0.85, a), xytext=(-a - 0.85, -a),
                 arrowprops=dict(arrowstyle='<->', color='0.5', lw=0.9))
-    ax.text(-a - 1.12, 0, r'$dy$', fontsize=11, va='center', ha='center', color='0.35')
+    ax.text(-a - 1.12, 0, r'$dx_2$', fontsize=11, va='center', ha='center', color='0.35')
     ax.set_xlim(-2.7, 2.3); ax.set_ylim(-2.5, 2.1)
     ax.set_aspect('equal'); ax.axis('off')
+
+
+def equilibrium_from_svg(width=820):
+    """Turn the section-2 SVG into the PNG the notebook embeds.
+
+    That figure is not drawn here: it is 01_equilibrium-3d-cartesian.svg, by Pantelis
+    Liolios (pantelisliolios.com), with the author's mark moved from the drawing to the
+    caption in the notebook. cairosvg is needed for nothing else, so the import is local
+    and the step is skipped when it is missing.
+    """
+    svg = os.path.join(HERE, "01_equilibrium-3d-cartesian.svg")
+    if not os.path.isfile(svg):
+        return
+    try:
+        import cairosvg
+    except ImportError:
+        print("cairosvg not installed: 01_equilibrium_3d.png left untouched")
+        return
+    cairosvg.svg2png(url=svg, write_to=os.path.join(HERE, "01_equilibrium_3d.png"),
+                     output_width=width, background_color="white")
 
 
 def main():
@@ -283,6 +305,8 @@ def main():
     moment_balance(b)
     fig.tight_layout()
     save(fig, "01_stress_cube")
+
+    equilibrium_from_svg()
 
     print("written:", ", ".join(sorted(f for f in os.listdir(HERE)
                                        if f.endswith(".png"))))

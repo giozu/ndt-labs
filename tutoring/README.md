@@ -1,4 +1,4 @@
-# Tutoring — optional track
+# Tutoring, the optional track
 
 An alignment track: the mechanics and thermal-analysis background the course builds on but
 has no room to teach.
@@ -11,7 +11,7 @@ This repository currently holds the first.
 
 | | module | h | notebook |
 |---|---|---|---|
-| **M1** | Continuum mechanics | 2.5 | `M1_continuum` — traction and the Cauchy tensor, equilibrium, principal stresses and invariants, Mohr's circles, hydrostatic and deviatoric parts, strain and compatibility, Saint-Venant |
+| **M1** | Continuum mechanics | 2.5 | `M1_continuum`: traction and the Cauchy tensor, equilibrium, principal stresses and invariants, Mohr's circles, hydrostatic and deviatoric parts, strain and compatibility, Saint-Venant |
 
 The notebook needs no install. It is plain Python (numpy, matplotlib, scipy): no
 bootstrap cell, nothing to set up. It runs on a bare Colab runtime or on any local
@@ -34,7 +34,7 @@ M1 covers its material completely, with more worked content than 2.5 hours can c
 loud. That is the opposite of trimming it to fit the slot.
 
 The track opens with a **diagnostic test**, and what it shows decides *what gets skipped in
-the room* — not what has been deleted from the file. A cohort that is solid on index
+the room*, not what has been deleted from the file. A cohort that is solid on index
 notation gets that section as reading; a cohort that is not gets it worked through. Either
 way the material is there afterwards, which matters precisely because the track is
 optional: a student who could not attend still has the whole thing.
