@@ -17,7 +17,7 @@ needed: no install, no bootstrap cell.
 5. Mohr's circles; τ_max = (σ₁ − σ₃)/2
 6. Small strain, and what compatibility actually means
 7. Saint-Venant's principle, and the one place it does not reach
-8. Six exercises
+8. Eight exercises
 
 ## What it produces
 
