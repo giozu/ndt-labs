@@ -429,7 +429,7 @@ def equilibrium_cube(ax, h=1.0):
             vis = (s_*I[k]) @ _W > 0
             ax.plot(*_pr(ctr), 'o', color=COL[k], ms=3.5, zorder=6)
             for j in range(3):
-                tip = ctr + 0.62*h*I[j]
+                tip = ctr + s_*0.62*h*I[j]
                 ax.annotate('', xy=_pr(tip), xytext=_pr(ctr), zorder=6,
                             arrowprops=dict(arrowstyle='-|>', color=COL[k],
                                             lw=1.5 if vis else 1.0,
