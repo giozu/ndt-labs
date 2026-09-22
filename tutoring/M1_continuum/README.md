@@ -8,3 +8,5 @@
   Wiley & Sons, Hoboken, 2003.
 - L. Corradi Dell'Acqua, *Meccanica delle strutture, vol. 1: Il comportamento dei mezzi
   continui*. McGraw-Hill Libri Italia, Milano, 1992.
+- S. P. Timoshenko and J. N. Goodier, *Theory of Elasticity*, 2nd edition. McGraw-Hill,
+  New York, 1951.
