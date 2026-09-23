@@ -10,10 +10,9 @@ writes the PNGs the notebook embeds into this folder. If NDT_COURSE_NOTES_FIGURE
 at a directory it also writes the PDF versions there, so the notebook and the course notes
 cannot drift apart.
 
-The file names carry the prefix `04_`, which is M2's prefix in the course notes and does
-NOT match the module number: chapters 3 to 6 of the notes still use figure prefixes from
-an earlier chapter order. That drift is recorded in `punch_list.md` (2026-09-23) and is to
-be fixed for all four chapters at once, not here.
+The file names carry the prefix of the course-notes CHAPTER that owns the figure, not of
+the module: M2 feeds chapter 3, so the prefix is `03_`. Chapters 3 to 6 carried prefixes
+from an older chapter order until 2026-09-23, when all eight were renamed together.
 """
 import os
 import numpy as np
@@ -147,7 +146,7 @@ def main():
     fig.suptitle("Three reductions of the 3-D law. Red is what you impose, blue is what "
                  "follows - and note where $z$ points in each.", fontsize=12, y=0.97)
     plt.tight_layout()
-    save(fig, "04_plane_hypotheses")
+    save(fig, "03_plane_hypotheses")
 
 
 if __name__ == "__main__":
