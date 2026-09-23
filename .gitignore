@@ -28,4 +28,5 @@ ndt-work/
 tutoring/*
 !tutoring/README.md
 !tutoring/M1_continuum/
+!tutoring/M2_constitutive/
 *:Zone.Identifier
