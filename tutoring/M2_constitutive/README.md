@@ -14,3 +14,6 @@
   Reinhold, New York, 1974.
 - G. E. Dieter, *Mechanical Metallurgy*, SI Metric edition, adapted by D. Bacon.
   McGraw-Hill, London, 1988.
+- W. Ramberg and W. R. Osgood, *Description of Stress-Strain Curves by Three Parameters*.
+  NACA Technical Note No. 902, National Advisory Committee for Aeronautics, Washington,
+  1943.
