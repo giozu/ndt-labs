@@ -89,7 +89,7 @@ def plane_stress(ax):
             ha="center", style="italic")
     _triad(ax, (0.02, 0.95), ("x", "y", "z"), [IN, DEPTH, UP])
     _verdict(ax, 2.90, r"$\sigma_{zz}=0$", r"$\varepsilon_{zz}\neq 0$, it thins")
-    ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.22)
+    ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.32)
 
 
 def plane_strain(ax):
@@ -103,7 +103,7 @@ def plane_strain(ax):
     for y in (0.40, 0.56, 0.72):                            # pulled OUT: see the note
         _arrow(ax, (0.56, y), (0.24, y), RESULT, lw=1.3, ms=8)
         _arrow(ax, (1.98, y), (2.30, y), RESULT, lw=1.3, ms=8)
-    ax.text(1.27, 1.03, r"in-plane tension makes it want to contract along $z$;"
+    ax.text(1.27, 1.13, r"in-plane tension makes it want to contract along $z$;"
                         "\nthe ends pull back to stop it", fontsize=8.5, ha="center",
             color="0.25")
     ax.text(1.27, 0.08, "long body, ends held", fontsize=9.5, ha="center",
@@ -111,7 +111,7 @@ def plane_strain(ax):
     _triad(ax, (0.06, 0.40), ("x", "y", "z"), [UP, DEPTH, IN])
     _verdict(ax, 2.90, r"$\varepsilon_{zz}=0$",
              r"$\sigma_{zz}=\nu(\sigma_{xx}+\sigma_{yy})$")
-    ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.22)
+    ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.32)
 
 
 def generalised_plane_strain(ax):
@@ -141,7 +141,7 @@ def generalised_plane_strain(ax):
     _triad(ax, (-0.20, 0.10), ("r", r"$\theta$", "z"), [UP, DEPTH, IN])
     _verdict(ax, 2.90, r"$\varepsilon_{zz}=$ const," + "\nvalue unknown",
              r"$\int_A\sigma_{zz}\,dA=N$" + "\nfixes it")
-    ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.22)
+    ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.32)
 
 
 def main():
