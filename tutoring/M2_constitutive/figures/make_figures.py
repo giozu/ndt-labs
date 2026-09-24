@@ -123,16 +123,22 @@ def generalised_plane_strain(ax):
     for x, fc in ((x0, "0.97"), (x1, "0.86")):
         ax.add_patch(Ellipse((x, yc), 2*ex, 2*ro, fc=fc, ec=EDGE, lw=1.1, zorder=3))
         ax.add_patch(Ellipse((x, yc), 2*ex*ri/ro, 2*ri, fc="w", ec=EDGE, lw=1.0, zorder=4))
-    for s in (+1, -1):                       # sigma_zz over the annulus, either sign
-        for f in (0.62, 0.88):
-            y = yc + s*f*ro
-            _arrow(ax, (x1 + ex + 0.03, y), (x1 + ex + 0.33, y), RESULT, lw=1.3, ms=7)
+    # sigma_zz over the annulus, on BOTH ends (or the body is not in equilibrium) and of
+    # BOTH signs: the outer row pulls, the inner row pushes. Only the resultant N is
+    # imposed, so the field is free to change sign over the section; with N = 0 it must.
+    for x_end, out in ((x0 - ex, -1), (x1 + ex, +1)):
+        for s in (+1, -1):
+            for f, tension in ((0.88, True), (0.62, False)):
+                y = yc + s*f*ro
+                near, far = x_end + out*0.03, x_end + out*0.28
+                _arrow(ax, *(((near, y), (far, y)) if tension else ((far, y), (near, y))),
+                       RESULT, lw=1.3, ms=7)
     ax.text(1.27, 1.03, r"$N=0$ for a temperature gradient alone;" + "\n"
                         r"$N=p\,\pi r_i^2$ for pressure on closed heads",
             fontsize=8.5, ha="center", color="0.25")
     ax.text(1.27, 0.08, "long cylinder, ends free", fontsize=9.5, ha="center",
             style="italic")
-    _triad(ax, (0.06, 0.56), ("r", r"$\theta$", "z"), [UP, DEPTH, IN])
+    _triad(ax, (-0.20, 0.10), ("r", r"$\theta$", "z"), [UP, DEPTH, IN])
     _verdict(ax, 2.90, r"$\varepsilon_{zz}=$ const," + "\nvalue unknown",
              r"$\int_A\sigma_{zz}\,dA=N$" + "\nfixes it")
     ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.22)
