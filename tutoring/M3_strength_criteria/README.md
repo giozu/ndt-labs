@@ -13,7 +13,6 @@
 - D. R. Olander, *Fundamental Aspects of Nuclear Reactor Fuel Elements*, TID-26711-P1.
   Technical Information Center, Energy Research and Development Administration, 1976.
 - G. Petrucci, *Lezioni di Costruzione di Macchine*, cap. 11: *Criteri di resistenza*.
-- M. Bocciarelli, *Meccanica dei Solidi e delle Strutture*, Dispensa 03.
 - L. Corradi Dell'Acqua, *Meccanica delle strutture, vol. 1: Il comportamento dei mezzi
   continui*. McGraw-Hill Libri Italia, Milano, 1992.
 - L. Wolf, M. S. Kazimi and N. E. Todreas, *Introduction to Structural Mechanics*, Note
