@@ -29,4 +29,5 @@ tutoring/*
 !tutoring/README.md
 !tutoring/M1_continuum/
 !tutoring/M2_constitutive/
+!tutoring/M3_strength_criteria/
 *:Zone.Identifier
