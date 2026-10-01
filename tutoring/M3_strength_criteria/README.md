@@ -14,5 +14,3 @@
   Technical Information Center, Energy Research and Development Administration, 1976.
 - L. Corradi Dell'Acqua, *Meccanica delle strutture, vol. 1: Il comportamento dei mezzi
   continui*. McGraw-Hill Libri Italia, Milano, 1992.
-- L. Wolf, M. S. Kazimi and N. E. Todreas, *Introduction to Structural Mechanics*, Note
-  L.4, course 22.312 Engineering of Nuclear Reactors. MIT, Cambridge (MA).
