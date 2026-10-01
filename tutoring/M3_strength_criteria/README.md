@@ -8,8 +8,8 @@
   Wiley & Sons, Hoboken, 2003.
 - ASME, *Boiler and Pressure Vessel Code*, Section III, Division 1, Subsection NB: Class 1
   Components. ASME, New York, 2010.
-- C. Lombardi, *Nuclear Plants*, Part II, Chapter 4: *Thermomechanics* (main author L.
-  Luzzi); Chapter 7: *Fuel Element*. 2017.
+- C. Lombardi, *Impianti nucleari*, Parte II, Cap. 4: *Termomeccanica*; Cap. 7: *L'elemento di
+  combustibile* (both written with L. Luzzi). CUSL, Milano.
 - D. R. Olander, *Fundamental Aspects of Nuclear Reactor Fuel Elements*, TID-26711-P1.
   Technical Information Center, Energy Research and Development Administration, 1976.
 - L. Corradi Dell'Acqua, *Meccanica delle strutture, vol. 1: Il comportamento dei mezzi
