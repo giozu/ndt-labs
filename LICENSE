@@ -6,7 +6,7 @@ All rights reserved **except as granted below**.
 This repository holds two different kinds of work, and they carry two different
 licences. Nothing here is unlicensed.
 
-## Software — Apache License 2.0
+## Software - Apache License 2.0
 
 Full text: [`LICENSES/Apache-2.0.txt`](LICENSES/Apache-2.0.txt)
 
@@ -19,7 +19,7 @@ Applies to:
 Same licence as [z3st](https://github.com/giozu/z3st), which this material runs on,
 so the two repositories can be read and reused under one rule.
 
-## Teaching material — CC BY-NC 4.0
+## Teaching material - CC BY-NC 4.0
 
 Notice and links: [`LICENSES/CC-BY-NC-4.0.txt`](LICENSES/CC-BY-NC-4.0.txt)
 

@@ -2,7 +2,7 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 
-# z3st run products — regenerate them, never commit them
+# z3st run products: regenerate them, never commit them
 mesh.msh
 output/
 log_mesh.md

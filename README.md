@@ -1,4 +1,4 @@
-# NDT Labs — 057922 Nuclear Design and Technology
+# NDT Labs - 057922 Nuclear Design and Technology
 
 Computational material for **Nuclear Design and Technology** (057922), Politecnico di Milano, Teaching Assistant (TA): G. Zullo.
 
@@ -33,8 +33,8 @@ Two kinds of work, two licences, and nothing here is unlicensed:
 
 | | |
 |---|---|
-| **software** — every `.py` file | [Apache-2.0](LICENSES/Apache-2.0.txt), the same licence as [z3st](https://github.com/giozu/z3st) |
-| **teaching material** — the notebooks and all the prose | [CC BY-NC 4.0](LICENSES/CC-BY-NC-4.0.txt): credit the author, say what you changed, do not sell it |
+| **software**: every `.py` file | [Apache-2.0](LICENSES/Apache-2.0.txt), the same licence as [z3st](https://github.com/giozu/z3st) |
+| **teaching material**: the notebooks and all the prose | [CC BY-NC 4.0](LICENSES/CC-BY-NC-4.0.txt): credit the author, say what you changed, do not sell it |
 
 A notebook is teaching material that contains code, so to remove the doubt: the **code cells inside the notebooks may also be used under Apache-2.0**. 
 Teaching a course from this material is the use it was written for. Details in [`LICENSE`](LICENSE).
