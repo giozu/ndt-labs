@@ -144,6 +144,85 @@ def generalised_plane_strain(ax):
     ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.32)
 
 
+def fracture_analysis_diagram():
+    """Stress-temperature diagram for crack initiation and arrest, after Weisman (1977),
+    Fig. 10.9 and section 10.4, with his letters and his NDT.
+
+    NDT is where yield (B) and tensile strength (A) coincide, the flaw-free NDT. With a
+    small flaw the fracture stress C drops to the yield curve about 50 degF (28 K) higher,
+    the NDT with a small flaw. The crack-arrest curve D sits on the lower fracture
+    propagation stress, about 6500 psi (45 MPa), meets B at FTE ~ NDT + 60 degF (33 K) and
+    A at FTP soon after. Temperature is measured from NDT; differences in degF convert with
+    5/9 alone. Schematic, as Weisman's is: no stress values but the lower one.
+    """
+    T = np.linspace(-25, 75, 700)                     # T - NDT, degC
+    T_f, FTE, FTP = 27.8, 33.3, 36.0                  # NDT small flaw (+50 degF), +60 degF; FTP just after, as Weisman draws it
+    A = 1.40 - 0.004*T                                # tensile strength
+    B = np.minimum(1.00 + 0.40*np.exp(-T/9.0), A)     # yield, meets A at NDT (T = 0)
+    B = np.where(T < 0, A, B)                         # below NDT the two coincide
+    def at(curve, t):
+        return np.interp(t, T, curve)
+    # C, fracture stress with a small flaw: on B up to T_f, then up to A at FTP
+    s = np.clip((T - T_f)/(FTP - T_f), 0, 1)
+    C = B + (A - B)*(3*s**2 - 2*s**3)
+    # D, crack arrest: flat on the lower stress, then convex up through B at FTE to A at FTP
+    shelf, T0 = 0.13, 8.0
+    yE, yP = at(B, FTE), at(A, FTP)
+    pw = np.log((yE - shelf)/(yP - shelf))/np.log((FTE - T0)/(FTP - T0))
+    D = shelf + (yP - shelf)*(np.clip(T - T0, 0, None)/(FTP - T0))**pw
+    D = np.where(T > FTP, np.nan, D)
+    assert pw > 1, "D is convex, as in Weisman's figure"
+
+    fig, ax = plt.subplots(figsize=(10, 5.8))
+    ax.plot(T, A, color="0.2", lw=1.8)
+    ax.plot(T, B, color="0.2", lw=1.8)
+    ax.plot(T, C, color="tab:blue", lw=1.8, ls="--")
+    ax.plot(T, D, color="tab:red", lw=3, ls=(0, (6, 3)))
+    ax.text(50, at(A, 50) + 0.04, r"A, $S_{UTS}$  tensile strength", fontsize=10)
+    ax.text(50, at(B, 50) - 0.09, r"B, $S_y$  yield strength", fontsize=10)
+    ax.text(8, 1.47, "C  tensile strength\n    with a small flaw", color="tab:blue",
+            fontsize=10)
+    ax.text(34, 0.55, "D  crack arrest\n    curve", color="tab:red", fontsize=10)
+    ax.axhline(shelf, xmax=(T0 + 25)/100, color="tab:red", lw=3, ls=(0, (6, 3)))
+    ax.text(-24, shelf - 0.07, "lower fracture propagation stress, about 45 MPa (6500 psi)",
+            fontsize=9, color="tab:red")
+    ax.fill_between(T, shelf, D, where=(T > T0) & (T < FTP), color="tab:red", alpha=0.08)
+    ax.plot([FTE, FTP], [yE, yP], "o", color="k", ms=5)
+    ax.text(FTP + 1, yP + 0.03, "FTP", fontsize=10)
+    marks = [(0, "NDT\n-12 °C (10 °F)"), (T_f, "NDT with a\nsmall flaw\n16 °C (60 °F)"),
+             (FTE, "FTE\n21 °C\n(70 °F)")]
+    for t, lab, ha, dx in zip(*zip(*marks), ("left", "right", "left"), (1, -1, 1)):
+        ax.axvline(t, color="0.5", ls=":", lw=1)
+        ax.text(t + dx, 1.86, lab, fontsize=9, va="top", ha=ha)
+    ax.text(5, 0.55, "a running crack\npropagates", color="tab:red", fontsize=10,
+            ha="center")
+    ax.text(58, 0.55, "a running crack\nis arrested", color="tab:red", fontsize=10,
+            ha="center")
+    ax.annotate("", xy=(30, 1.98), xytext=(0, 1.98), annotation_clip=False,
+                arrowprops=dict(arrowstyle="->", color="tab:purple", lw=2))
+    ax.text(32, 1.98, "irradiation moves NDT, and the whole diagram with it, to the right",
+            color="tab:purple", fontsize=10, va="center")
+    ax.set_xlim(-25, 75); ax.set_ylim(0, 1.9)
+    ax.set_yticks([])
+    # Absolute axis with Weisman's carbon steel: NDT = 10 degF. Curves are computed in
+    # T - NDT; only the labels are absolute.
+    from matplotlib.ticker import FixedLocator, FixedFormatter
+    T_NDT = (10 - 32)*5/9
+    tc = np.arange(-30, 70, 10)
+    ax.xaxis.set_major_locator(FixedLocator(tc - T_NDT))
+    ax.xaxis.set_major_formatter(FixedFormatter([f"{t:g}".replace("-", "\u2212") for t in tc]))
+    ax.set_xlabel("temperature (°C), carbon steel with NDT = -12 °C (10 °F), "
+                  "Weisman's example")
+    sec = ax.secondary_xaxis(-0.16, functions=(lambda x: (x + T_NDT)*9/5 + 32,
+                                              lambda f: (f - 32)*5/9 - T_NDT))
+    sec.set_xticks(np.arange(-20, 180, 20))
+    sec.set_xlabel("(°F)")
+    ax.set_ylabel("stress, applied plus residual  →")
+    ax.grid(alpha=0.25)
+    plt.tight_layout()
+    save(fig, "03_fracture_analysis_diagram")
+
+
 def main():
     fig, axes = plt.subplots(1, 3, figsize=(14.5, 3.3))
     for ax in axes:
@@ -153,6 +232,7 @@ def main():
                  "follows - and note where $z$ points in each.", fontsize=12, y=0.97)
     plt.tight_layout()
     save(fig, "03_plane_hypotheses")
+    fracture_analysis_diagram()
 
 
 if __name__ == "__main__":

@@ -14,6 +14,11 @@
 - W. S. Slaughter, *The Linearized Theory of Elasticity*. Birkhäuser, Boston, 2002.
 - J. F. Harvey, *Theory and Design of Modern Pressure Vessels*, 2nd edition. Van Nostrand
   Reinhold, New York, 1974.
+- J. Weisman (ed.), *Elements of Nuclear Reactor Design*. Elsevier, Amsterdam, 1977.
+- K. L. Murty and I. Charit, *An Introduction to Nuclear Materials: Fundamentals and
+  Applications*. Wiley-VCH, Weinheim, 2013.
+- J. T. A. Roberts, *Structural Materials in Nuclear Power Systems*. Plenum Press, New
+  York, 1981.
 - G. E. Dieter, *Mechanical Metallurgy*, SI Metric edition, adapted by D. Bacon.
   McGraw-Hill, London, 1988.
 - W. Ramberg and W. R. Osgood, *Description of Stress-Strain Curves by Three Parameters*.
