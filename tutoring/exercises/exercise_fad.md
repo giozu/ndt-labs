@@ -24,7 +24,7 @@ $(T_F - 32)\cdot 5/9$.
 1. A crack is already running through the steel. Does it keep running or is it arrested in each case?
    (a) NDT - 10 °C, 30 MPa; (b) NDT - 10 °C, 150 MPa; (c) NDT + 45 °C, 250 MPa;
    (d) NDT + 20 °C, 300 MPa; (e) NDT + 60 °C, 400 MPa.
-2. The stress on the vertical axis is the applied stress **plus the residual stress**. A welded vessel is
+2. The stress that matters is the total one, applied **plus residual**. A welded vessel is
    loaded to a membrane stress of 100 MPa, a third of $S_y$. Why does it still have to be
    pressurised above FTE?
 3. A vessel is brought to pressure at no less than 4 °C (40 °F), and its total stress

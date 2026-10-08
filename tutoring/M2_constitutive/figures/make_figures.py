@@ -217,7 +217,7 @@ def fracture_analysis_diagram():
                                               lambda f: (f - 32)*5/9 - T_NDT))
     sec.set_xticks(np.arange(-20, 180, 20))
     sec.set_xlabel("(°F)")
-    ax.set_ylabel("stress, applied plus residual  →")
+    ax.set_ylabel("stress  →")
     ax.grid(alpha=0.25)
     plt.tight_layout()
     save(fig, "03_fracture_analysis_diagram")
