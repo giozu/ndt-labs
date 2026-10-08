@@ -223,6 +223,47 @@ def fracture_analysis_diagram():
     save(fig, "03_fracture_analysis_diagram")
 
 
+def charpy_transition():
+    """Charpy energy against temperature for a ferritic steel, after Murty and Charit
+    (2013), Fig. 5.20: the two shelves, the two transitions they draw, and the 40 J
+    convention for the DBTT of their section 5.1.4.1. Schematic: no temperature values.
+    """
+    T = np.linspace(-1, 1, 400)
+    low, up = 0.06, 1.0
+    E = low + (up - low)*0.5*(1 + np.tanh(3.2*T))
+    def T_at(e):
+        return np.interp(e, E, T)
+    e15, e40 = 0.13, 0.27                          # 20 J (15 ft lb) and 40 J, schematic
+    t_duct, t_dbtt, t_frac = T_at(e15), T_at(e40), 0.55
+    fig, ax = plt.subplots(figsize=(8.5, 5))
+    ax.plot(T, E, color="k", lw=2.5)
+    for t, lab in ((t_duct, "ductility\ntransition"), (t_frac, "fracture\ntransition")):
+        ax.axvline(t, color="0.4", lw=1.2)
+        ax.text(t, 1.12, lab, ha="center", va="bottom", fontsize=10)
+    ax.plot([-1, t_dbtt], [e40, e40], color="tab:red", ls="--", lw=1.2)
+    ax.plot([t_dbtt, t_dbtt], [0, e40], color="tab:red", ls="--", lw=1.2)
+    ax.text(-0.98, e40 + 0.02, "40 J (30 ft·lb)", color="tab:red", fontsize=9)
+    ax.text(t_dbtt + 0.02, 0.01, "DBTT", color="tab:red", fontsize=10, fontweight="bold")
+    ax.text(-0.98, e15 + 0.015, "about 20 J (15 ft·lb)", color="0.3", fontsize=9)
+    ax.plot([-1, t_duct], [e15, e15], color="0.4", ls=":", lw=1)
+    ax.text(-0.95, 0.70, "lower shelf: cleavage\nbrittle failure in service,\n"
+            "easy crack initiation", fontsize=10, va="top")
+    ax.annotate("", xy=(-0.95, 0.42), xytext=(t_duct, 0.42),
+                arrowprops=dict(arrowstyle="->", lw=1.2))
+    ax.text(0.98, 0.70, "upper shelf: ductile tearing\nshear fracture, ductile in "
+            "service,\ndifficult crack initiation\nand propagation", fontsize=10,
+            va="top", ha="right")
+    ax.annotate("", xy=(0.95, 0.42), xytext=(t_frac, 0.42),
+                arrowprops=dict(arrowstyle="->", lw=1.2))
+    ax.set_xlim(-1, 1); ax.set_ylim(0, 1.25)
+    ax.set_xticks([]); ax.set_yticks([])
+    ax.set_xlabel("temperature  →"); ax.set_ylabel("Charpy absorbed energy  →")
+    for side in ("top", "right"):
+        ax.spines[side].set_visible(False)
+    plt.tight_layout()
+    save(fig, "03_charpy_transition")
+
+
 def main():
     fig, axes = plt.subplots(1, 3, figsize=(14.5, 3.3))
     for ax in axes:
@@ -233,6 +274,7 @@ def main():
     plt.tight_layout()
     save(fig, "03_plane_hypotheses")
     fracture_analysis_diagram()
+    charpy_transition()
 
 
 if __name__ == "__main__":
