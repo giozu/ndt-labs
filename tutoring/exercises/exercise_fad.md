@@ -53,13 +53,18 @@ The crack-arrest curve D runs along the lower fracture propagation stress, 34-55
 NDT, then rises through $\frac12 S_y = 150$ MPa at NDT + 17 °C, $S_y = 300$ MPa at
 FTE = NDT + 33 °C and $S_u = 480$ MPa at FTP = NDT + 67 °C.
 
-| case | where | verdict |
-|:---|:---|:---|
-| (a) NDT - 10 °C, 30 MPa | under the lower fracture propagation stress | **arrested**: below 34 MPa no crack runs, at any temperature |
-| (b) NDT - 10 °C, 150 MPa | above it, left of curve D | **propagates** |
-| (c) NDT + 45 °C, 250 MPa | right of FTE, below $S_y$ | **arrested**: past FTE no crack runs under elastic stress |
-| (d) NDT + 20 °C, 300 MPa | at yield, left of FTE | **propagates**: FTE is NDT + 33 °C |
-| (e) NDT + 60 °C, 400 MPa | right of FTP, above yield | no brittle fracture: past FTP failure is by shear |
+| case | where | regime | verdict |
+|:---|:---|:---:|:---|
+| (a) NDT - 10 °C, 30 MPa | under the lower fracture propagation stress | I | **arrested**: below 34 MPa no crack runs, at any temperature |
+| (b) NDT - 10 °C, 150 MPa | above it, left of curve D | II | **propagates**: a small flaw would not start a crack here, but one already running keeps going |
+| (c) NDT + 45 °C, 250 MPa | right of FTE, below $S_y$ | IV | **arrested**: past FTE no crack runs under elastic stress |
+| (d) NDT + 20 °C, 300 MPa | at yield, left of FTE | II | **propagates**: FTE is NDT + 33 °C |
+| (e) NDT + 60 °C, 400 MPa | right of FTP, above yield | IV | no brittle fracture: past FTP failure is by shear |
+
+The regimes are those of the shaded diagram: I below the lower fracture propagation stress,
+II above the crack-arrest curve D but below the initiation curve of a small flaw, III above
+both, IV to the right of D. Cases (b) and (d) are regime II, where nothing starts from a
+small flaw, but the question supposes a crack already running, and above D it runs.
 
 Cases (c) and (d) carry nearly the same stress and differ only in temperature. That is the
 point of the diagram: whether a stress is safe depends on how far above NDT the steel is.
