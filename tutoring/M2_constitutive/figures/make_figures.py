@@ -189,7 +189,7 @@ def fracture_analysis_diagram():
     ax.plot(T, D, color="tab:red", lw=3)
     ax.text(70, at(A, 70) + 0.04, r"A, $S_{UTS}$  tensile strength", fontsize=10)
     ax.text(70, at(B, 70) - 0.09, r"B, $S_y$  yield strength", fontsize=10)
-    ax.text(30, 1.30, "C  initiation,\n    small flaw", color="tab:blue", fontsize=10,
+    ax.text(30, 1.30, "C  tensile strength\n    with a small flaw", color="tab:blue", fontsize=10, va="top",
             ha="right")
     ax.text(40, 0.62, "D  crack arrest\n    (CAT curve)", color="tab:red", fontsize=10)
     ax.plot(0, at(B, 0), "o", color="tab:blue", ms=7, zorder=6)
