@@ -225,7 +225,7 @@ def fracture_analysis_diagram():
     ax.set_yticks([0.25, 0.5, 0.75, 1.0])
     ax.set_yticklabels([r"$\frac{1}{4}S_y$", r"$\frac{1}{2}S_y$", r"$\frac{3}{4}S_y$", r"$S_y$"])
     ax.set_xlabel("temperature  →")
-    ax.set_ylabel("nominal stress\n(units of $S_y$ at NDT)")
+    ax.set_ylabel("nominal tensile stress\n(units of $S_y$ at NDT)")
     ax.grid(alpha=0.25)
     plt.tight_layout()
     save(fig, "03_fracture_analysis_diagram")
@@ -254,15 +254,22 @@ def charpy_transition():
     ax.text(t_dbtt + 0.02, 0.01, "DBTT", color="tab:red", fontsize=10, fontweight="bold")
     ax.text(-0.98, e15 + 0.015, "about 20 J (15 ft·lb)", color="0.3", fontsize=9)
     ax.plot([-1, t_duct], [e15, e15], color="0.4", ls=":", lw=1)
-    ax.text(-0.95, 0.70, "lower shelf: cleavage\nbrittle failure in service,\n"
-            "easy crack initiation", fontsize=10, va="top")
-    ax.annotate("", xy=(-0.95, 0.42), xytext=(t_duct, 0.42),
-                arrowprops=dict(arrowstyle="->", lw=1.2))
-    ax.text(0.98, 0.70, "upper shelf: ductile tearing\nshear fracture, ductile in "
-            "service,\ndifficult crack initiation\nand propagation", fontsize=10,
-            va="top", ha="right")
-    ax.annotate("", xy=(0.95, 0.42), xytext=(t_frac, 0.42),
-                arrowprops=dict(arrowstyle="->", lw=1.2))
+    # the five arrows of Murty and Charit's Fig. 5.20: two leftwards and one rightwards
+    # from the ductility transition, two rightwards from the fracture transition
+    arrows = [(t_duct, -0.97, 0.78, "brittle failure\nin service"),
+              (t_duct, -0.97, 0.40, "easy crack\ninitiation"),
+              (t_duct, 0.97, 0.62, "ductile behaviour in service"),
+              (t_frac, 0.97, 1.02, "shear fracture"),
+              (t_frac, 0.97, 0.30, "difficult crack initiation\nand propagation")]
+    for x0, x1, y, lab in arrows:
+        ax.annotate("", xy=(x1, y), xytext=(x0, y),
+                    arrowprops=dict(arrowstyle="->", lw=1.3))
+        right = x1 > x0
+        ax.text(x1 - 0.02 if right else x1 + 0.02, y + 0.03, lab, fontsize=9.5,
+                ha="right" if right else "left", va="bottom")
+    ax.text(-0.97, low + 0.02, "lower shelf: cleavage", fontsize=9, color="0.35")
+    ax.text(0.97, up - 0.07, "upper shelf: ductile tearing", fontsize=9, color="0.35",
+            ha="right")
     ax.set_xlim(-1, 1); ax.set_ylim(0, 1.25)
     ax.set_xticks([]); ax.set_yticks([])
     ax.set_xlabel("temperature  →"); ax.set_ylabel("Charpy absorbed energy  →")
@@ -311,7 +318,7 @@ def fad_regimes():
     ax.set_yticks([0.25, 0.5, 0.75, 1.0])
     ax.set_yticklabels([r"$\frac{1}{4}S_y$", r"$\frac{1}{2}S_y$", r"$\frac{3}{4}S_y$", r"$S_y$"])
     ax.set_xlabel("temperature  →")
-    ax.set_ylabel("nominal stress\n(units of $S_y$ at NDT)")
+    ax.set_ylabel("nominal tensile stress\n(units of $S_y$ at NDT)")
     plt.tight_layout()
     save(fig, "03_fad_regimes")
 
@@ -358,7 +365,7 @@ def fad_criteria():
     ax.set_yticks([0.25, 0.5, 0.75, 1.0])
     ax.set_yticklabels([r"$\frac{1}{4}S_y$", r"$\frac{1}{2}S_y$", r"$\frac{3}{4}S_y$", r"$S_y$"])
     ax.set_xlabel("temperature  →")
-    ax.set_ylabel("nominal stress\n(units of $S_y$ at NDT)")
+    ax.set_ylabel("nominal tensile stress\n(units of $S_y$ at NDT)")
     plt.tight_layout()
     save(fig, "03_fad_criteria")
 
