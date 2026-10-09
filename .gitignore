@@ -11,6 +11,7 @@ log_z3st.md
 *.pvd
 *.h5
 *.xdmf
+*.pdf
 
 # fetched by the notebooks at run time
 ndt_setup.py
@@ -32,4 +33,3 @@ tutoring/*
 !tutoring/M3_strength_criteria/
 !tutoring/exercises/
 *:Zone.Identifier
-exercise_fad.mdtutoring/exercises/exercise_fad.pdf
