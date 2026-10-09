@@ -316,6 +316,53 @@ def fad_regimes():
     save(fig, "03_fad_regimes")
 
 
+def fad_criteria():
+    """The four design criteria as rectangles (minimum temperature, maximum stress), each
+    with its upper-left corner on the crack-arrest curve D. Criterion 1 is the band below
+    34.5 MPa at any temperature; 2, 3, 4 start at NDT + 17, FTE and FTP and reach 1/2 S_y,
+    S_y and S_u. On the regimes of fad_regimes, faintly, for context.
+    """
+    from matplotlib.patches import Rectangle
+    T, A, B, C, D, shelf, (H, FTE, FTP, T_nf), at = _fad_curves()
+    top = np.maximum(A, B)
+    fig, ax = plt.subplots(figsize=(10.5, 6))
+    up = np.maximum(D, shelf)
+    ax.fill_between(T, 0, shelf, color="#2ca02c", alpha=0.12, lw=0)
+    ax.fill_between(T, shelf, np.minimum(up, top), color="#1f77b4", alpha=0.10, lw=0)
+    ax.fill_between(T, up, top, where=top > up, color="#d62728", alpha=0.08, lw=0)
+    ax.plot(T, A, color="0.3", lw=1.4); ax.plot(T, B, color="0.3", lw=1.4)
+    ax.plot(T, D, color="tab:red", lw=2.8)
+    x1 = 90
+    s1 = 0.115                                       # 34.5 MPa, low end of the shelf band
+    boxes = [(-45, s1, "1", "any T,  σ ≤ 34.5 MPa (5 ksi)", "#2ca02c"),
+             (H, 0.5, "2", "T ≥ NDT + 17 °C,  σ ≤ ½ S$_y$", "#9467bd"),
+             (FTE, at(B, FTE), "3", "T ≥ FTE,  σ ≤ S$_y$", "#1f77b4"),
+             (FTP, at(A, FTP), "4", "T ≥ FTP,  any σ", "#ff7f0e")]
+    for k, (t0, smax, n, lab, c) in enumerate(boxes):
+        ax.add_patch(Rectangle((t0, 0), x1 - t0, smax, fill=False, ec=c, lw=2.2,
+                               ls=(0, (5, 2)), zorder=4 + k))
+        if n != "1":
+            ax.plot(t0, smax, "o", color=c, ms=8, zorder=10)
+        ax.text(t0 + 1.5 if n != "1" else -43, smax + 0.03 if n != "1" else 0.035,
+                f"{n}   {lab}", color=c, fontsize=10, fontweight="bold", zorder=10)
+    ax.text(-30, 0.62, "covered by no criterion:\nhere a crack can run", color="#a33",
+            fontsize=10, style="italic")
+    ax.text(5, 1.25, "D, crack-arrest curve: the corner\nof every rectangle sits on it",
+            color="tab:red", fontsize=10)
+    ticks = [(0, "NDT"), (H, "NDT + 17 °C\n(30 °F)"), (FTE, "FTE\nNDT + 33 °C\n(60 °F)"),
+             (FTP, "FTP\nNDT + 67 °C\n(120 °F)")]
+    for t, _ in ticks:
+        ax.axvline(t, color="0.6", ls=":", lw=1)
+    ax.set_xticks([t for t, _ in ticks]); ax.set_xticklabels([l for _, l in ticks])
+    ax.set_xlim(-45, 90); ax.set_ylim(0, 1.6)
+    ax.set_yticks([0.25, 0.5, 0.75, 1.0])
+    ax.set_yticklabels([r"$\frac{1}{4}S_y$", r"$\frac{1}{2}S_y$", r"$\frac{3}{4}S_y$", r"$S_y$"])
+    ax.set_xlabel("temperature  →")
+    ax.set_ylabel("nominal stress\n(units of $S_y$ at NDT)")
+    plt.tight_layout()
+    save(fig, "03_fad_criteria")
+
+
 def main():
     fig, axes = plt.subplots(1, 3, figsize=(14.5, 3.3))
     for ax in axes:
@@ -327,6 +374,7 @@ def main():
     save(fig, "03_plane_hypotheses")
     fracture_analysis_diagram()
     fad_regimes()
+    fad_criteria()
     charpy_transition()
 
 
