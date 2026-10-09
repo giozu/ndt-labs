@@ -153,9 +153,9 @@ def _fad_curves():
     B = np.minimum(0.95 + 0.05*np.exp(-T/tau), A)     # yield; meets A at T_nf
     at = lambda curve, t: np.interp(t, T, curve)
     # C, fracture initiation from a small flaw: on B up to NDT (point A of the DWT), then up
-    # to A, at FTP
+    # to A, at FTP, concave downwards: it leaves NDT rising and flattens onto A (Fig. 4.14)
     s = np.clip(T/FTP, 0, 1)
-    C = B + (A - B)*(3*s**2 - 2*s**3)
+    C = B + (A - B)*(1 - (1 - s)**2)
     # D, crack arrest: shelf, convex up through 1/2 S_y and S_y, then bending onto A at FTP
     shelf = 0.15                                      # 34-55 MPa (5-8 ksi) for a ~300 MPa steel
     yE, yP = at(B, FTE), at(A, FTP)
@@ -168,6 +168,13 @@ def _fad_curves():
     assert np.all(np.diff(D[(T > 0) & (T < FTP)]) > 0), "D rises from NDT to FTP"
 
     return T, A, B, C, D, shelf, (H, FTE, FTP, T_nf), at
+
+
+def _flaw_curve(lev, T, C, D, shelf):
+    """Initiation curve of a flaw larger than C's: flat at lev below NDT, then rising between
+    D and C to meet both at FTP (Jawad and Farr, Fig. 4.14)."""
+    w = (lev - shelf)/(np.interp(0, T, C) - shelf)
+    return np.where(T <= 0, lev, D + w*(C - D))
 
 
 def fracture_analysis_diagram():
@@ -189,8 +196,9 @@ def fracture_analysis_diagram():
     ax.plot(T, D, color="tab:red", lw=3)
     ax.text(70, at(A, 70) + 0.04, r"A, $S_{UTS}$  tensile strength", fontsize=10)
     ax.text(70, at(B, 70) - 0.09, r"B, $S_y$  yield strength", fontsize=10)
-    ax.text(30, 1.30, "C  tensile strength\n    with a small flaw", color="tab:blue", fontsize=10, va="top",
-            ha="right")
+    ax.annotate("C  tensile strength with a small flaw", xy=(20, at(C, 20)), xytext=(4, 1.60),
+                color="tab:blue", fontsize=10,
+                arrowprops=dict(arrowstyle="->", color="tab:blue", lw=1))
     ax.text(40, 0.62, "D  crack arrest\n    (CAT curve)", color="tab:red", fontsize=10)
     ax.plot(0, at(B, 0), "o", color="tab:blue", ms=7, zorder=6)
     ax.annotate("drop-weight test: small\nflaw (about 25 mm, 1 in) at yield", xy=(0, at(B, 0)),
@@ -198,11 +206,14 @@ def fracture_analysis_diagram():
                 arrowprops=dict(arrowstyle="->", color="tab:blue", lw=1))
     ax.plot(T_nf, at(A, T_nf), "o", color="0.2", ms=5)
     ax.text(T_nf - 1, at(A, T_nf) + 0.05, "$S_y = S_u$, no flaw", fontsize=9, ha="center")
-    # larger flaws: lower initiation stresses, joining D (Jawad and Farr, Fig. 4.14)
+    # larger flaws: lower initiation stresses below NDT, all rising to FTP between D and C
+    # (Jawad and Farr, Fig. 4.14)
     for lev, lab in ((0.75, "100-200 mm (4-8 in)"), (0.5, "200-300 mm (8-12 in)"),
                      (0.25, "0.3-0.6 m (1-2 ft)")):
-        Tj = T[np.argmax(D >= lev)]
-        ax.plot([-45, Tj], [lev, lev], color="tab:blue", lw=1.1, ls=":")
+        L = _flaw_curve(lev, T, C, D, shelf)
+        inside = (T > 0) & (T < FTP)
+        assert np.all(L[inside] > D[inside]) and np.all(L[inside] < C[inside]), "D < L < C"
+        ax.plot(T, L, color="tab:blue", lw=1.1, ls=":")
         ax.text(-44, lev + 0.02, "flaw " + lab, color="tab:blue", fontsize=8.5)
     ax.axhspan(0, shelf, color="tab:green", alpha=0.10)
     ax.text(-44, 0.05, "below 34-55 MPa (5-8 ksi): no crack propagates, at any temperature",
@@ -299,8 +310,7 @@ def fad_regimes():
     ax.plot(T, A, color="0.2", lw=1.6); ax.plot(T, B, color="0.2", lw=1.6)
     ax.plot(T, C, color="tab:blue", lw=1.6, ls="--"); ax.plot(T, D, color="tab:red", lw=2.6)
     for lev in (0.75, 0.5, 0.25):
-        Tj = T[np.argmax(D >= lev)]
-        ax.plot([-45, Tj], [lev, lev], color="0.35", lw=1, ls=":")
+        ax.plot(T, _flaw_curve(lev, T, C, D, shelf), color="0.35", lw=1, ls=":")
     ax.text(-44, 0.765, "dotted: larger flaws start lower, and turn II into III", fontsize=8.5,
             color="0.3")
     lab = [("I", -20, 0.05, "I  no crack can run, at any temperature"),
