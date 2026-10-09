@@ -207,7 +207,7 @@ def fracture_analysis_diagram():
     ax.axhspan(0, shelf, color="tab:green", alpha=0.10)
     ax.text(-44, 0.05, "below 34-55 MPa (5-8 ksi): no crack propagates, at any temperature",
             fontsize=9, color="tab:green")
-    ax.fill_between(T, shelf, D, where=(T > 0) & (T < FTP), color="tab:red", alpha=0.07)
+    ax.fill_between(T, shelf, D, where=(T > 0), color="tab:red", alpha=0.07)
     ax.text(-14, 0.86, "a running crack\npropagates", color="tab:red", fontsize=10,
             ha="center")
     ax.text(58, 0.40, "a running crack\nis arrested", color="tab:red", fontsize=10,
