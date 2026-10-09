@@ -1,20 +1,19 @@
 # Exercise: brittle fracture and the Fracture Analysis Diagram
 
-A ferritic steel for a pressure vessel. Its stress-temperature diagram for crack initiation
-and arrest is below, drawn after Weisman for his carbon steel, whose nil-ductility
-temperature NDT, where yield and tensile strength coincide, is -12 °C (10 °F). For another
-steel the whole diagram moves with its NDT: use the distances in the table.
+A ferritic steel for a pressure vessel. Its Fracture Analysis Diagram is below, with all
+temperatures counted from the nil-ductility temperature NDT measured in the drop-weight
+test.
 
-![Stress-temperature diagram for crack initiation and arrest](../M2_constitutive/figures/03_fracture_analysis_diagram.png)
+![Fracture Analysis Diagram](../M2_constitutive/figures/03_fracture_analysis_diagram.png)
 
 | data | value |
 |---|---|
 | yield strength | $S_y = 300$ MPa |
 | tensile strength | $S_u = 480$ MPa |
-| lower fracture propagation stress | about 45 MPa (6500 psi) |
-| NDT with a small flaw | NDT + 28 °C (50 °F) |
+| lower fracture propagation stress | 34-55 MPa (5-8 ksi) |
+| crack-arrest curve at $\frac12 S_y$ | NDT + 17 °C (30 °F) |
 | FTE, crack-arrest curve at $S_y$ | NDT + 33 °C (60 °F) |
-| FTP, crack-arrest curve at $S_u$ | just above FTE |
+| FTP, crack-arrest curve at $S_u$ | NDT + 67 °C (120 °F) |
 
 Temperature differences in °F convert with the factor 5/9 alone; absolute temperatures with
 $(T_F - 32)\cdot 5/9$.
@@ -32,11 +31,17 @@ $(T_F - 32)\cdot 5/9$.
    vessel may carry below that NDT?
 4. The steel is bought with NDT = -30 °C (-22 °F). After years of service, surveillance
    specimens show an NDT shift of 50 °C (90 °F).
-   (a) Where are NDT, the NDT with a small flaw, and FTE now?
+   (a) Where are NDT, FTE and FTP now?
    (b) May the vessel still be brought to full pressure at 4 °C?
    (c) What is the lowest temperature at which it may?
 5. Why does irradiation move NDT to the right? Answer with the Davidenkov construction:
    the yield stress against the cleavage fracture stress.
+6. *(Jawad and Farr, 2019, Example 4.2.)* A low-carbon steel with NDT = 15 °F (-9 °C) is used
+   in a pressure vessel. What is the minimum safe operating temperature? What if stress
+   concentrations take the stress beyond yield in some areas?
+7. *(Jawad and Farr, 2019, Example 4.3.)* A low-carbon steel vessel with NDT = -20 °F
+   (-29 °C) is to start up at 0 °F (-18 °C), at a stress of half the yield strength. Is the
+   start-up temperature safe?
 
 ---
 
@@ -44,13 +49,13 @@ $(T_F - 32)\cdot 5/9$.
 
 ### 1. Reading the diagram
 
-The crack-arrest curve D runs along the lower fracture propagation stress, about 45 MPa,
-then rises steeply. It crosses the yield curve at FTE = NDT + 33 °C, and reaches the tensile
-strength at FTP just after.
+The crack-arrest curve D runs along the lower fracture propagation stress, 34-55 MPa, up to
+NDT, then rises through $\frac12 S_y = 150$ MPa at NDT + 17 °C, $S_y = 300$ MPa at
+FTE = NDT + 33 °C and $S_u = 480$ MPa at FTP = NDT + 67 °C.
 
 | case | where | verdict |
 |:---|:---|:---|
-| (a) NDT - 10 °C, 30 MPa | under the lower fracture propagation stress | **arrested**: below about 45 MPa no crack runs, at any temperature |
+| (a) NDT - 10 °C, 30 MPa | under the lower fracture propagation stress | **arrested**: below 34 MPa no crack runs, at any temperature |
 | (b) NDT - 10 °C, 150 MPa | above it, left of curve D | **propagates** |
 | (c) NDT + 45 °C, 250 MPa | right of FTE, below $S_y$ | **arrested**: past FTE no crack runs under elastic stress |
 | (d) NDT + 20 °C, 300 MPa | at yield, left of FTE | **propagates**: FTE is NDT + 33 °C |
@@ -79,8 +84,8 @@ At $S_y$ the vessel has to be at or above FTE when it is pressurised:
 
 In °F the data are round: 40 - 60 = -20 °F = -28.9 °C.
 
-Below NDT the total stress must stay under the lower fracture propagation stress, **about
-45 MPa (6500 psi)**. On a cold vessel that is a small fraction of the operating stress
+Below NDT the total stress must stay under the lower fracture propagation stress, **34-55 MPa
+(5-8 ksi)**: Chattopadhyay (2005) takes the low end, 34.5 MPa. On a cold vessel that is a small fraction of the operating stress
 (Weisman, 1977, §10.4).
 
 ### 4. A vessel ages
@@ -91,11 +96,11 @@ shift:
 | | as bought | after the shift |
 |:---|:---:|:---:|
 | NDT | -30 °C (-22 °F) | **20 °C (68 °F)** |
-| NDT with a small flaw = NDT + 28 °C | -2 °C (28 °F) | **48 °C (118 °F)** |
 | FTE = NDT + 33 °C | 3 °C (38 °F) | **53 °C (128 °F)** |
+| FTP = NDT + 67 °C | 37 °C (98 °F) | **87 °C (188 °F)** |
 
 (b) **No.** At 4 °C the steel is now 16 °C *below* its NDT: only the lower fracture
-propagation stress, about 45 MPa, is allowed. When new, 4 °C was just above FTE and the
+propagation stress, 34-55 MPa, is allowed. When new, 4 °C was just above FTE and the
 vessel could be loaded to yield.
 
 (c) Full pressure needs $T \ge$ FTE: **53 °C (128 °F)**. The vessel has to be heated before it
@@ -108,3 +113,39 @@ Neutrons fill the lattice with defects that obstruct dislocations. The yield str
 at every temperature, while the cleavage fracture stress hardly changes. The temperature
 where the two cross, below which the steel cleaves before it can yield, moves up. So does
 NDT, and with it the whole diagram.
+
+### 6. Minimum safe operating temperature (Jawad and Farr, Example 4.2)
+
+No stress level is given, so the stress is assumed at yield. At $S_y$ the crack-arrest
+curve is crossed at FTE:
+
+```math
+T_{\min} = \text{NDT} + 60\ ^\circ\text{F} = 15 + 60 = 75\ ^\circ\text{F}\ (24\ ^\circ\text{C})
+```
+
+If stress concentrations take the stress beyond yield in some areas, the conservative
+choice is FTP:
+
+```math
+T_{\min} = \text{NDT} + 120\ ^\circ\text{F} = 135\ ^\circ\text{F}\ (57\ ^\circ\text{C})
+```
+
+In °C: NDT = -9.4 °C, plus 33.3 °C and 66.7 °C, gives 23.9 °C and 57.2 °C.
+
+### 7. A cold start-up (Jawad and Farr, Example 4.3)
+
+At half the yield strength the crack-arrest curve gives NDT + 30 °F:
+
+```math
+T_{\min} = -20 + 30 = 10\ ^\circ\text{F}\ (-12\ ^\circ\text{C})
+```
+
+The start-up at 0 °F (-18 °C) is below it, so it is **unsafe**. Either the stress is reduced
+during start-up, or a steel with a lower NDT is chosen.
+
+**A limit of the diagram that matters for a reactor vessel.** Jawad and Farr (p. 39) give two
+conditions for using these steps: the steel has to be a low-carbon steel, and the section
+less than 2 in (51 mm) thick. Above 6 in (152 mm) it has been proposed to take
+FTE = NDT + 120 °F (67 °C) instead of NDT + 60 °F, and FTP = NDT + 210 °F (117 °C) instead
+of NDT + 120 °F. A reactor vessel wall is well over 6 in thick, so for it the diagram as
+drawn is on the unconservative side.

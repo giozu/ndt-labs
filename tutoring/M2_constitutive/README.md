@@ -12,6 +12,9 @@
 - S. P. Timoshenko and J. N. Goodier, *Theory of Elasticity*, 2nd edition. McGraw-Hill,
   New York, 1951.
 - W. S. Slaughter, *The Linearized Theory of Elasticity*. Birkhäuser, Boston, 2002.
+- S. Chattopadhyay, *Pressure Vessels: Design and Practice*. CRC Press, 2005.
+- M. H. Jawad and J. R. Farr, *Structural Analysis and Design of Process Equipment*, 3rd
+  edition. Wiley, 2019.
 - J. F. Harvey, *Theory and Design of Modern Pressure Vessels*, 2nd edition. Van Nostrand
   Reinhold, New York, 1974.
 - J. Weisman (ed.), *Elements of Nuclear Reactor Design*. Elsevier, Amsterdam, 1977.

@@ -144,80 +144,88 @@ def generalised_plane_strain(ax):
     ax.set_xlim(-0.25, 3.45); ax.set_ylim(0.0, 1.32)
 
 
-def fracture_analysis_diagram():
-    """Stress-temperature diagram for crack initiation and arrest, after Weisman (1977),
-    Fig. 10.9 and section 10.4, with his letters and his NDT.
-
-    NDT is where yield (B) and tensile strength (A) coincide, the flaw-free NDT. With a
-    small flaw the fracture stress C drops to the yield curve about 50 degF (28 K) higher,
-    the NDT with a small flaw. The crack-arrest curve D sits on the lower fracture
-    propagation stress, about 6500 psi (45 MPa), meets B at FTE ~ NDT + 60 degF (33 K) and
-    A at FTP soon after. Temperature is measured from NDT; differences in degF convert with
-    5/9 alone. Schematic, as Weisman's is: no stress values but the lower one.
-    """
-    T = np.linspace(-25, 75, 700)                     # T - NDT, degC
-    T_f, FTE, FTP = 27.8, 33.3, 36.0                  # NDT small flaw (+50 degF), +60 degF; FTP just after, as Weisman draws it
-    A = 1.40 - 0.004*T                                # tensile strength
-    B = np.minimum(1.00 + 0.40*np.exp(-T/9.0), A)     # yield, meets A at NDT (T = 0)
-    B = np.where(T < 0, A, B)                         # below NDT the two coincide
-    def at(curve, t):
-        return np.interp(t, T, curve)
-    # C, fracture stress with a small flaw: on B up to T_f, then up to A at FTP
-    s = np.clip((T - T_f)/(FTP - T_f), 0, 1)
+def _fad_curves():
+    """The four curves of the generalised FAD, shared by the diagram and its regimes."""
+    T = np.linspace(-45, 90, 900)                     # T - NDT, degC
+    H, FTE, FTP, T_nf = 16.7, 33.3, 66.7, -28.0       # +30, +60, +120 degF; S_y = S_u flaw-free
+    A = 1.40 - 0.002*T                                # tensile strength
+    tau = -T_nf/np.log((1.40 - 0.002*T_nf - 0.95)/0.05)
+    B = np.minimum(0.95 + 0.05*np.exp(-T/tau), A)     # yield; meets A at T_nf
+    at = lambda curve, t: np.interp(t, T, curve)
+    # C, fracture initiation from a small flaw: on B up to NDT (point A of the DWT), then up
+    # to A, at FTP
+    s = np.clip(T/FTP, 0, 1)
     C = B + (A - B)*(3*s**2 - 2*s**3)
-    # D, crack arrest: flat on the lower stress, then convex up through B at FTE to A at FTP
-    shelf, T0 = 0.13, 8.0
+    # D, crack arrest: shelf, convex up through 1/2 S_y and S_y, then bending onto A at FTP
+    shelf = 0.15                                      # 34-55 MPa (5-8 ksi) for a ~300 MPa steel
     yE, yP = at(B, FTE), at(A, FTP)
-    pw = np.log((yE - shelf)/(yP - shelf))/np.log((FTE - T0)/(FTP - T0))
-    D = shelf + (yP - shelf)*(np.clip(T - T0, 0, None)/(FTP - T0))**pw
-    D = np.where(T > FTP, np.nan, D)
-    assert pw > 1, "D is convex, as in Weisman's figure"
+    pw = np.log((0.5 - shelf)/(yE - shelf))/np.log(H/FTE)
+    D = shelf + (yE - shelf)*(np.clip(T, 0, FTE)/FTE)**pw
+    m0, h = (yE - shelf)*pw/FTE, FTP - FTE
+    q = m0*h/(yP - yE)
+    D = np.where(T > FTE, yP - (yP - yE)*(1 - np.clip((T - FTE)/h, 0, 1))**q, D)
+    D = np.where(T > FTP, A, D)
+    assert np.all(np.diff(D[(T > 0) & (T < FTP)]) > 0), "D rises from NDT to FTP"
 
-    fig, ax = plt.subplots(figsize=(10, 5.8))
+    return T, A, B, C, D, shelf, (H, FTE, FTP, T_nf), at
+
+
+def fracture_analysis_diagram():
+    """The generalised Fracture Analysis Diagram, after Jawad and Farr (2019), Figs. 4.12
+    and 4.14, with Weisman's letters for the curves (1977, Fig. 10.9).
+
+    NDT is the drop-weight NDT (ASTM E208): a notched brittle weld bead, loaded to no more
+    than yield, stops breaking. Point A, small flaw at yield. The crack-arrest curve D
+    passes through 1/2 S_y at NDT + 30 degF, S_y at FTE = NDT + 60 degF and S_u at
+    FTP = NDT + 120 degF; the steps are differences, so they convert with 5/9 alone.
+    Stress in units of S_y at NDT. Schematic: the shapes and the marked steps are the content.
+    """
+    T, A, B, C, D, shelf, (H, FTE, FTP, T_nf), at = _fad_curves()
+    yE, yP = at(B, FTE), at(A, FTP)
+    fig, ax = plt.subplots(figsize=(10.5, 6))
     ax.plot(T, A, color="0.2", lw=1.8)
     ax.plot(T, B, color="0.2", lw=1.8)
     ax.plot(T, C, color="tab:blue", lw=1.8, ls="--")
-    ax.plot(T, D, color="tab:red", lw=3, ls=(0, (6, 3)))
-    ax.text(50, at(A, 50) + 0.04, r"A, $S_{UTS}$  tensile strength", fontsize=10)
-    ax.text(50, at(B, 50) - 0.09, r"B, $S_y$  yield strength", fontsize=10)
-    ax.text(8, 1.47, "C  tensile strength\n    with a small flaw", color="tab:blue",
-            fontsize=10)
-    ax.text(34, 0.55, "D  crack arrest\n    curve", color="tab:red", fontsize=10)
-    ax.axhline(shelf, xmax=(T0 + 25)/100, color="tab:red", lw=3, ls=(0, (6, 3)))
-    ax.text(-24, shelf - 0.07, "lower fracture propagation stress, about 45 MPa (6500 psi)",
-            fontsize=9, color="tab:red")
-    ax.fill_between(T, shelf, D, where=(T > T0) & (T < FTP), color="tab:red", alpha=0.08)
-    ax.plot([FTE, FTP], [yE, yP], "o", color="k", ms=5)
-    ax.text(FTP + 1, yP + 0.03, "FTP", fontsize=10)
-    marks = [(0, "NDT\n-12 °C (10 °F)"), (T_f, "NDT with a\nsmall flaw\n16 °C (60 °F)"),
-             (FTE, "FTE\n21 °C\n(70 °F)")]
-    for t, lab, ha, dx in zip(*zip(*marks), ("left", "right", "left"), (1, -1, 1)):
-        ax.axvline(t, color="0.5", ls=":", lw=1)
-        ax.text(t + dx, 1.86, lab, fontsize=9, va="top", ha=ha)
-    ax.text(5, 0.55, "a running crack\npropagates", color="tab:red", fontsize=10,
+    ax.plot(T, D, color="tab:red", lw=3)
+    ax.text(70, at(A, 70) + 0.04, r"A, $S_{UTS}$  tensile strength", fontsize=10)
+    ax.text(70, at(B, 70) - 0.09, r"B, $S_y$  yield strength", fontsize=10)
+    ax.text(30, 1.30, "C  initiation,\n    small flaw", color="tab:blue", fontsize=10,
+            ha="right")
+    ax.text(40, 0.62, "D  crack arrest\n    (CAT curve)", color="tab:red", fontsize=10)
+    ax.plot(0, at(B, 0), "o", color="tab:blue", ms=7, zorder=6)
+    ax.annotate("drop-weight test: small\nflaw (about 25 mm, 1 in) at yield", xy=(0, at(B, 0)),
+                xytext=(-28, 1.12), fontsize=9, color="tab:blue",
+                arrowprops=dict(arrowstyle="->", color="tab:blue", lw=1))
+    ax.plot(T_nf, at(A, T_nf), "o", color="0.2", ms=5)
+    ax.text(T_nf - 1, at(A, T_nf) + 0.05, "$S_y = S_u$, no flaw", fontsize=9, ha="center")
+    # larger flaws: lower initiation stresses, joining D (Jawad and Farr, Fig. 4.14)
+    for lev, lab in ((0.75, "100-200 mm (4-8 in)"), (0.5, "200-300 mm (8-12 in)"),
+                     (0.25, "0.3-0.6 m (1-2 ft)")):
+        Tj = T[np.argmax(D >= lev)]
+        ax.plot([-45, Tj], [lev, lev], color="tab:blue", lw=1.1, ls=":")
+        ax.text(-44, lev + 0.02, "flaw " + lab, color="tab:blue", fontsize=8.5)
+    ax.axhspan(0, shelf, color="tab:green", alpha=0.10)
+    ax.text(-44, 0.05, "below 34-55 MPa (5-8 ksi): no crack propagates, at any temperature",
+            fontsize=9, color="tab:green")
+    ax.fill_between(T, shelf, D, where=(T > 0) & (T < FTP), color="tab:red", alpha=0.07)
+    ax.text(-14, 0.86, "a running crack\npropagates", color="tab:red", fontsize=10,
             ha="center")
-    ax.text(58, 0.55, "a running crack\nis arrested", color="tab:red", fontsize=10,
+    ax.text(58, 0.40, "a running crack\nis arrested", color="tab:red", fontsize=10,
             ha="center")
-    ax.annotate("", xy=(30, 1.98), xytext=(0, 1.98), annotation_clip=False,
+    ax.annotate("", xy=(30, 1.83), xytext=(0, 1.83), annotation_clip=False,
                 arrowprops=dict(arrowstyle="->", color="tab:purple", lw=2))
-    ax.text(32, 1.98, "irradiation moves NDT, and the whole diagram with it, to the right",
+    ax.text(32, 1.83, "irradiation moves NDT, and the whole diagram with it, to the right",
             color="tab:purple", fontsize=10, va="center")
-    ax.set_xlim(-25, 75); ax.set_ylim(0, 1.9)
-    ax.set_yticks([])
-    # Absolute axis with Weisman's carbon steel: NDT = 10 degF. Curves are computed in
-    # T - NDT; only the labels are absolute.
-    from matplotlib.ticker import FixedLocator, FixedFormatter
-    T_NDT = (10 - 32)*5/9
-    tc = np.arange(-30, 70, 10)
-    ax.xaxis.set_major_locator(FixedLocator(tc - T_NDT))
-    ax.xaxis.set_major_formatter(FixedFormatter([f"{t:g}".replace("-", "\u2212") for t in tc]))
-    ax.set_xlabel("temperature (°C), carbon steel with NDT = -12 °C (10 °F), "
-                  "Weisman's example")
-    sec = ax.secondary_xaxis(-0.16, functions=(lambda x: (x + T_NDT)*9/5 + 32,
-                                              lambda f: (f - 32)*5/9 - T_NDT))
-    sec.set_xticks(np.arange(-20, 180, 20))
-    sec.set_xlabel("(°F)")
-    ax.set_ylabel("stress  →")
+    ticks = [(0, "NDT"), (H, "NDT + 17 °C\n(30 °F)"), (FTE, "FTE\nNDT + 33 °C\n(60 °F)"),
+             (FTP, "FTP\nNDT + 67 °C\n(120 °F)")]
+    for t, _ in ticks:
+        ax.axvline(t, color="0.5", ls=":", lw=1)
+    ax.set_xticks([t for t, _ in ticks]); ax.set_xticklabels([l for _, l in ticks])
+    ax.set_xlim(-45, 90); ax.set_ylim(0, 1.75)
+    ax.set_yticks([0.25, 0.5, 0.75, 1.0])
+    ax.set_yticklabels([r"$\frac{1}{4}S_y$", r"$\frac{1}{2}S_y$", r"$\frac{3}{4}S_y$", r"$S_y$"])
+    ax.set_xlabel("temperature  →")
+    ax.set_ylabel("nominal stress\n(units of $S_y$ at NDT)")
     ax.grid(alpha=0.25)
     plt.tight_layout()
     save(fig, "03_fracture_analysis_diagram")
@@ -264,6 +272,50 @@ def charpy_transition():
     save(fig, "03_charpy_transition")
 
 
+def fad_regimes():
+    """The same diagram, shaded by what happens to a crack (small flaw), four regimes:
+    I below the lower propagation stress, II above D but below the initiation curve C,
+    III above both, IV below D (right of the crack-arrest curve). Larger flaws lower the
+    initiation line (dotted), and so turn part of II into III.
+    """
+    T, A, B, C, D, shelf, (H, FTE, FTP, T_nf), at = _fad_curves()
+    top = np.maximum(A, B)
+    fig, ax = plt.subplots(figsize=(10.5, 6))
+    col = {"I": "#2ca02c", "II": "#ffbf00", "III": "#d62728", "IV": "#1f77b4"}
+    ax.fill_between(T, 0, shelf, color=col["I"], alpha=0.30, lw=0)
+    up = np.maximum(D, shelf)
+    ax.fill_between(T, shelf, np.minimum(up, top), color=col["IV"], alpha=0.25, lw=0)
+    ax.fill_between(T, up, np.maximum(np.minimum(C, top), up), where=C > up,
+                    color=col["II"], alpha=0.35, lw=0)
+    ax.fill_between(T, np.maximum(C, up), top, where=top > np.maximum(C, up),
+                    color=col["III"], alpha=0.30, lw=0)
+    ax.plot(T, A, color="0.2", lw=1.6); ax.plot(T, B, color="0.2", lw=1.6)
+    ax.plot(T, C, color="tab:blue", lw=1.6, ls="--"); ax.plot(T, D, color="tab:red", lw=2.6)
+    for lev in (0.75, 0.5, 0.25):
+        Tj = T[np.argmax(D >= lev)]
+        ax.plot([-45, Tj], [lev, lev], color="0.35", lw=1, ls=":")
+    ax.text(-44, 0.765, "dotted: larger flaws start lower, and turn II into III", fontsize=8.5,
+            color="0.3")
+    lab = [("I", -20, 0.05, "I  no crack can run, at any temperature"),
+           ("II", -20, 0.52, "II  nothing starts from a small flaw,\n     but a crack that starts runs"),
+           ("III", -14, 1.22, "III  a crack starts and runs:\n      brittle fracture"),
+           ("IV", 55, 0.55, "IV  a crack that starts\n      is arrested")]
+    for k, x, y, t in lab:
+        ax.text(x, y, t, fontsize=10, fontweight="bold", color=col[k] if k != "II" else "#b07d00")
+    ticks = [(0, "NDT"), (H, "NDT + 17 °C\n(30 °F)"), (FTE, "FTE\nNDT + 33 °C\n(60 °F)"),
+             (FTP, "FTP\nNDT + 67 °C\n(120 °F)")]
+    for t, _ in ticks:
+        ax.axvline(t, color="0.5", ls=":", lw=1)
+    ax.set_xticks([t for t, _ in ticks]); ax.set_xticklabels([l for _, l in ticks])
+    ax.set_xlim(-45, 90); ax.set_ylim(0, 1.6)
+    ax.set_yticks([0.25, 0.5, 0.75, 1.0])
+    ax.set_yticklabels([r"$\frac{1}{4}S_y$", r"$\frac{1}{2}S_y$", r"$\frac{3}{4}S_y$", r"$S_y$"])
+    ax.set_xlabel("temperature  →")
+    ax.set_ylabel("nominal stress\n(units of $S_y$ at NDT)")
+    plt.tight_layout()
+    save(fig, "03_fad_regimes")
+
+
 def main():
     fig, axes = plt.subplots(1, 3, figsize=(14.5, 3.3))
     for ax in axes:
@@ -274,6 +326,7 @@ def main():
     plt.tight_layout()
     save(fig, "03_plane_hypotheses")
     fracture_analysis_diagram()
+    fad_regimes()
     charpy_transition()
 
 
