@@ -227,8 +227,8 @@ def fracture_analysis_diagram():
                 arrowprops=dict(arrowstyle="->", color="tab:purple", lw=2))
     ax.text(32, 1.83, "irradiation moves NDT, and the whole diagram with it, to the right",
             color="tab:purple", fontsize=10, va="center")
-    ticks = [(0, "NDT"), (H, "NDT + 17 °C\n(30 °F)"), (FTE, "FTE\nNDT + 33 °C\n(60 °F)"),
-             (FTP, "FTP\nNDT + 67 °C\n(120 °F)")]
+    ticks = [(0, "NDT"), (H, "NDT + 17°C\n(30°F)"), (FTE, "FTE\nNDT + 33°C\n(60°F)"),
+             (FTP, "FTP\nNDT + 67°C\n(120°F)")]
     for t, _ in ticks:
         ax.axvline(t, color="0.5", ls=":", lw=1)
     ax.set_xticks([t for t, _ in ticks]); ax.set_xticklabels([l for _, l in ticks])
@@ -319,8 +319,8 @@ def fad_regimes():
            ("IV", 55, 0.55, "IV  a crack that starts\n      is arrested")]
     for k, x, y, t in lab:
         ax.text(x, y, t, fontsize=10, fontweight="bold", color=col[k] if k != "II" else "#b07d00")
-    ticks = [(0, "NDT"), (H, "NDT + 17 °C\n(30 °F)"), (FTE, "FTE\nNDT + 33 °C\n(60 °F)"),
-             (FTP, "FTP\nNDT + 67 °C\n(120 °F)")]
+    ticks = [(0, "NDT"), (H, "NDT + 17°C\n(30°F)"), (FTE, "FTE\nNDT + 33°C\n(60°F)"),
+             (FTP, "FTP\nNDT + 67°C\n(120°F)")]
     for t, _ in ticks:
         ax.axvline(t, color="0.5", ls=":", lw=1)
     ax.set_xticks([t for t, _ in ticks]); ax.set_xticklabels([l for _, l in ticks])
@@ -352,7 +352,7 @@ def fad_criteria():
     x1 = 90
     s1 = 0.115                                       # 34.5 MPa, low end of the shelf band
     boxes = [(-45, s1, "1", "any T,  σ ≤ 34.5 MPa (5 ksi)", "#2ca02c"),
-             (H, 0.5, "2", "T ≥ NDT + 17 °C,  σ ≤ ½ S$_y$", "#9467bd"),
+             (H, 0.5, "2", "T ≥ NDT + 17°C,  σ ≤ ½ S$_y$", "#9467bd"),
              (FTE, at(B, FTE), "3", "T ≥ FTE,  σ ≤ S$_y$", "#1f77b4"),
              (FTP, at(A, FTP), "4", "T ≥ FTP,  any σ", "#ff7f0e")]
     for k, (t0, smax, n, lab, c) in enumerate(boxes):
@@ -366,8 +366,8 @@ def fad_criteria():
             fontsize=10, style="italic")
     ax.text(5, 1.25, "D, crack-arrest curve: the corner\nof every rectangle sits on it",
             color="tab:red", fontsize=10)
-    ticks = [(0, "NDT"), (H, "NDT + 17 °C\n(30 °F)"), (FTE, "FTE\nNDT + 33 °C\n(60 °F)"),
-             (FTP, "FTP\nNDT + 67 °C\n(120 °F)")]
+    ticks = [(0, "NDT"), (H, "NDT + 17°C\n(30°F)"), (FTE, "FTE\nNDT + 33°C\n(60°F)"),
+             (FTP, "FTP\nNDT + 67°C\n(120°F)")]
     for t, _ in ticks:
         ax.axvline(t, color="0.6", ls=":", lw=1)
     ax.set_xticks([t for t, _ in ticks]); ax.set_xticklabels([l for _, l in ticks])
