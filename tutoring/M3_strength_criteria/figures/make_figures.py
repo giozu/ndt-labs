@@ -57,7 +57,7 @@ def surfaces(ax, sY=250.0, L=330.0):
         for locus, col, lw in ((circ, VM, 1.6), (hexa, TR, 1.8)):
             p = locus + s*L*N
             ax.plot(p[:, 0], p[:, 1], p[:, 2], color=col, lw=lw)
-    for k in range(0, 720, 120):                              # the six Tresca edges
+    for k in range(60, 720, 120):                             # the six Tresca edges (uniaxial directions)
         a, b = hexa[k] - L*N, hexa[k] + L*N
         ax.plot(*zip(a, b), color=TR, lw=1.2)
     for k in range(0, 720, 90):                               # a few cylinder rulings

@@ -31,5 +31,7 @@ tutoring/*
 !tutoring/M1_continuum/
 !tutoring/M2_constitutive/
 !tutoring/M3_strength_criteria/
+!tutoring/M4_conduction/
+!tutoring/M5_convection/
 !tutoring/exercises/
 *:Zone.Identifier
