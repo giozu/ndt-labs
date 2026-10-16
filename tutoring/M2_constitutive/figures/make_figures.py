@@ -7,12 +7,9 @@ shows the resulting images; this script is the only owner of them.
     python3 make_figures.py
 
 writes the PNGs the notebook embeds into this folder. If NDT_COURSE_NOTES_FIGURES points
-at a directory it also writes the PDF versions there, so the notebook and the course notes
-cannot drift apart.
+at a directory it also writes the PDF versions there.
 
-The file names carry the prefix of the course-notes CHAPTER that owns the figure, not of
-the module: M2 feeds chapter 3, so the prefix is `03_`. Chapters 3 to 6 carried prefixes
-from an older chapter order until 2026-09-23, when all eight were renamed together.
+File names carry the prefix `03_`, a figure numbering independent of the module number.
 """
 import os
 import numpy as np

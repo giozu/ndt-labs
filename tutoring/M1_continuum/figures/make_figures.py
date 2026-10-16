@@ -7,8 +7,7 @@ shows the resulting images; this script is the only owner of them.
     python3 make_figures.py
 
 writes the PNGs the notebook embeds into this folder. If NDT_COURSE_NOTES_FIGURES points
-at a directory it also writes the PDF versions there, so the notebook and the course notes
-cannot drift apart.
+at a directory it also writes the PDF versions there.
 """
 import os
 import numpy as np

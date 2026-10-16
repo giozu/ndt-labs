@@ -9,8 +9,7 @@ shows the resulting images; this script is the only owner of them.
 writes the PNGs the notebook embeds into this folder. If NDT_COURSE_NOTES_FIGURES points
 at a directory it also writes the PDF versions there.
 
-File names carry the prefix of the course-notes CHAPTER that owns the figure, not of the
-module: chapter 4 of the notes owns both drawings, hence `04_`.
+File names carry the prefix `04_` shared with the conduction drawings.
 """
 import os
 import numpy as np
@@ -32,7 +31,7 @@ def save(fig, name, png=True, pdf=True):
     plt.close(fig)
 
 
-# The notebook writes h_s, T_s, T_f; chapter 4 of the notes writes h, T_w, T_b, k_l.
+# Symbols: the notebook writes h_s, T_s, T_f; the PDF variant uses h, T_w, T_b, k_l.
 SYM_NB = dict(h="h_s", w="T_s", b="T_f", k="k")
 SYM_NOTES = dict(h="h", w="T_w", b="T_b", k="k_l")
 

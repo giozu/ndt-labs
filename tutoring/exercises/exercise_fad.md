@@ -22,7 +22,7 @@ $(T_F - 32)\cdot 5/9$.
 
 1. A crack is already running through the steel. Does it keep running or is it arrested in each case?
    (a) NDT - 10 °C, 30 MPa; (b) NDT - 10 °C, 150 MPa; (c) NDT + 45 °C, 250 MPa;
-   (d) NDT + 20 °C, 300 MPa; (e) NDT + 60 °C, 400 MPa.
+   (d) NDT + 20 °C, 300 MPa; (e) NDT + 70 °C, 400 MPa.
 2. The stress that matters is the total one, applied **plus residual**. A welded vessel is
    loaded to a membrane stress of 100 MPa, a third of $S_y$. Why does it still have to be
    pressurised above FTE?
@@ -59,7 +59,7 @@ FTE = NDT + 33 °C and $S_u = 480$ MPa at FTP = NDT + 67 °C.
 | (b) NDT - 10 °C, 150 MPa | above it, left of curve D | II | **propagates**: a small flaw would not start a crack here, but one already running keeps going |
 | (c) NDT + 45 °C, 250 MPa | right of FTE, below $S_y$ | IV | **arrested**: past FTE no crack runs under elastic stress |
 | (d) NDT + 20 °C, 300 MPa | at yield, left of FTE | II | **propagates**: FTE is NDT + 33 °C |
-| (e) NDT + 60 °C, 400 MPa | right of FTP, above yield | IV | no brittle fracture: past FTP failure is by shear |
+| (e) NDT + 70 °C, 400 MPa | right of FTP, above yield | IV | no brittle fracture: past FTP failure is by shear |
 
 The regimes are those of the shaded diagram: I below the lower fracture propagation stress,
 II above the crack-arrest curve D but below the initiation curve of a small flaw, III above

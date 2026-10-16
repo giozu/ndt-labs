@@ -9,8 +9,7 @@ shows the resulting images; this script is the only owner of them.
 writes the PNGs the notebook embeds into this folder. If NDT_COURSE_NOTES_FIGURES points
 at a directory it also writes the PDF versions there.
 
-File names carry the prefix of the course-notes CHAPTER that owns the figure, not of the
-module: M4 feeds chapter 4, so the prefix is `04_`.
+File names carry the prefix `04_`, a figure numbering independent of the module number.
 """
 import os
 import numpy as np
