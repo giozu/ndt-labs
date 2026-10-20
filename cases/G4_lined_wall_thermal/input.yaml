@@ -1,0 +1,43 @@
+# --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
+# Z3ST -- teaching case: temperature field of a lined, gamma-heated wall
+#
+# A neutral liner (4 mm) bonded on a neutral vessel (100 mm), the gamma source entering at
+# the wetted surface, h1 on the wetted surface and U2 on the outer face. The numbers are the
+# ones of section 6 of the G4 notebook, so the slab there is the hand check of this cylinder.
+#
+# THERMAL ONLY here. The mechanical analysis switches the mechanics on in this same case:
+# mechanical: true, plus the pressure and restraint conditions in boundary_conditions.yaml.
+# --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
+
+mesh_path: mesh.msh
+geometry_path: geometry.yaml
+boundary_conditions_path: boundary_conditions.yaml
+
+materials:
+  liner: liner_neutral.yaml
+  steel: steel_neutral.yaml
+
+regime: axisymmetric
+
+solver_settings:
+  coupling: staggered
+  max_iters: 100
+  relax_T: 1.0
+  relax_adaptive: false
+
+models:
+  thermal: true
+  mechanical: false
+
+thermal:
+  solver: linear
+  linear_solver: direct_mumps
+  rtol: 1.0e-10
+  stag_tol: 1.0e-10
+  convergence: rel_norm
+
+lhr:
+- 0.0
+time:
+- 0.0
+n_steps: 1

@@ -1,0 +1,16 @@
+name: liner_neutral
+
+# Generic austenitic liner for the teaching case. NEUTRAL numbers, as in section 6 of G4:
+# k lower than the vessel steel, the same attenuation coefficient (at these photon energies
+# the attenuation per unit mass follows the electrons per gram, nearly equal for the two
+# steels). Mechanical data are here for the mechanical analysis, unused while mechanical: false.
+
+E: 1.95e+11           # Young's modulus (Pa)
+nu: 0.30              # Poisson's ratio (-)
+k: 16.0               # Thermal conductivity (W/m·K)
+cp: 500.0             # Specific heat capacity (J/kg·K)
+alpha: 1.7e-5         # Thermal expansion coefficient (1/K)
+rho: 7900.0           # Density (kg/m³)
+T_ref: 560.0          # Reference (stress-free) temperature (K)
+mu_gamma: 27.0        # Gamma linear attenuation coefficient (1/m)
+gamma_heating: 2.6e+6 # Volumetric gamma heating at the WETTED surface r = Ri (W/m³)

@@ -1,0 +1,15 @@
+name: lined_gamma_heated_cylinder
+geometry_type: cyl
+
+Ri: 0.296 # wetted surface, inner face of the liner (m) -- where the gamma flux enters
+Rm: 0.300 # vessel inner surface, liner-vessel interface (m)
+Ro: 0.400 # vessel outer surface (m)
+Lz: 2.000 # height (m)
+
+labels:
+  inner_radius: 1
+  outer_radius: 2
+  bottom: 3
+  top: 4
+  liner: 10
+  steel: 11

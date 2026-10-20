@@ -1,0 +1,16 @@
+name: steel_neutral
+
+# Generic vessel steel for the teaching case. NEUTRAL numbers, the same as the other cases.
+# gamma_heating is the value at the WETTED surface (geometry Ri), the reference of the
+# K0 profile for BOTH materials: with one mu the source is continuous across the interface,
+# and the vessel inner surface receives the attenuated value by itself.
+
+E: 1.90e+11           # Young's modulus (Pa)
+nu: 0.30              # Poisson's ratio (-)
+k: 20.0               # Thermal conductivity (W/m·K)
+cp: 500.0             # Specific heat capacity (J/kg·K)
+alpha: 1.6e-5         # Thermal expansion coefficient (1/K)
+rho: 7900.0           # Density (kg/m³)
+T_ref: 560.0          # Reference (stress-free) temperature (K)
+mu_gamma: 27.0        # Gamma linear attenuation coefficient (1/m)
+gamma_heating: 2.6e+6 # Volumetric gamma heating at the WETTED surface r = Ri (W/m³)

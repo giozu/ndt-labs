@@ -16,10 +16,17 @@ log_z3st.md
 # fetched by the notebooks at run time
 ndt_setup.py
 
-# not tracked here
-cases/
-sessions/
-launcher/
+# Project material: only what has been published is tracked, file by file.
+# The session READMEs, sessions/README.md and cases/README.md are TA notes: never publish them.
+cases/*
+!cases/G4_lined_wall_thermal/
+sessions/*
+!sessions/G03_heat_transfer/
+!sessions/G04_gamma_temperature/
+sessions/*/README.md
+launcher/*
+!launcher/ndt_setup.py
+!launcher/README.md
 
 # a group's own working folder (ndt_setup.workdir), created at run time
 ndt-work/

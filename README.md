@@ -2,7 +2,7 @@
 
 Computational material for **Nuclear Design and Technology** (057922), Politecnico di Milano, Teaching Assistant (TA): G. Zullo.
 
-What is published here is the **tutoring track**: the background the course relies on. The material of the project block is distributed separately, when the block starts.
+What is published here is the **tutoring track**, the background the course relies on, and the first sessions of the **Project Lab**.
 
 ## Where to start
 
@@ -10,15 +10,20 @@ Open [`tutoring/`](tutoring/) and read its README first: it lists the modules pu
 
 The modules are **plain Python**. No install, no environment to build, no Google account: they run on a Colab runtime or on any local Python, unchanged. The modules are published one at a time, so check back rather than expecting the whole track at once.
 
+For the **Project Lab**, open the session notebook in [`sessions/`](sessions/), [in Colab](https://colab.research.google.com/github/giozu/ndt-labs/blob/main/sessions/G03_heat_transfer/G03_heat_transfer.ipynb) or from your own clone: its Step 0 sets up the code. The sessions are published as the Project Lab reaches them.
+
 ## Layout
 
 | Folder | Contents |
 |---|---|
 | `tutoring/` | the optional tutoring track, published module by module |
+| `sessions/` | the Project Lab notebooks, published session by session |
+| `cases/` | the z3st cases the sessions run, each checking itself against an analytical reference |
+| `launcher/` | `ndt_setup.py`, which the session notebooks use to set up the environment |
 
 ## Getting help
 
-Issues and pull requests are disabled on this repository. Bring problems to the tutoring, or email the TA, and always include the **full output of the cell that failed**, not a screenshot of the last line.
+Issues and pull requests are disabled on this repository. Bring problems to the tutoring or to the Project Lab, or email the TA, and always include the **full output of the cell that failed**, not a screenshot of the last line.
 
 ## Note
 
