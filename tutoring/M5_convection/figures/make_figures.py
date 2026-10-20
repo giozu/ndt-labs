@@ -31,8 +31,8 @@ def save(fig, name, png=True, pdf=True):
     plt.close(fig)
 
 
-# Symbols: the notebook writes h_s, T_s, T_f; the PDF variant uses h, T_w, T_b, k_l.
-SYM_NB = dict(h="h_s", w="T_s", b="T_f", k="k")
+# Symbols: the notebook writes h_s, T_s, T_b; the PDF variant uses h, T_w, T_b, k_l.
+SYM_NB = dict(h="h_s", w="T_s", b="T_b", k="k")
 SYM_NOTES = dict(h="h", w="T_w", b="T_b", k="k_l")
 
 

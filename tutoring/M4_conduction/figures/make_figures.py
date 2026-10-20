@@ -51,8 +51,8 @@ def plane_wall(ax):
         x += w; xs.append(x); Ts.append(Ts[-1] - f*(T1 - T2))
     ax.plot(xs, 0.30 + 0.40*(np.array(Ts) - T2)/(T1 - T2), color=TPROF, lw=2.2,
             marker="o", ms=3.5, zorder=5)
-    ax.text(0.06, 0.74, "$T_{f,1}$", color=TPROF, fontsize=10)
-    ax.text(x + 0.02, 0.30, "$T_{f,2}$", color=TPROF, fontsize=10)
+    ax.text(0.06, 0.74, "$T_{b,1}$", color=TPROF, fontsize=10)
+    ax.text(x + 0.02, 0.30, "$T_{b,2}$", color=TPROF, fontsize=10)
     ax.text(0.50, 0.86, "same area through every layer", fontsize=9.5, ha="center",
             style="italic")
     ax.text(0.50, 0.06,
