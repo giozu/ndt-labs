@@ -23,7 +23,7 @@ For the **Project Lab**, open the session notebook in [`sessions/`](sessions/), 
 
 ## Getting help
 
-Issues and pull requests are disabled on this repository. Bring problems to the tutoring or to the Project Lab, or email the TA, and always include the **full output of the cell that failed**, not a screenshot of the last line.
+Open an issue on this repository, bring the problem to the tutoring or to the Project Lab, or email the TA, and always include the **full output of the cell that failed**, not a screenshot of the last line.
 
 ## Note
 
