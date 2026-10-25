@@ -40,4 +40,9 @@ tutoring/*
 !tutoring/M4_conduction/
 !tutoring/M5_convection/
 !tutoring/exercises/
+# Exercise notebooks: only the files whitelisted below are tracked, one at a time.
+exercises/*
+!exercises/README.md
+!exercises/Pin_thermal_analysis.ipynb
+
 *:Zone.Identifier
