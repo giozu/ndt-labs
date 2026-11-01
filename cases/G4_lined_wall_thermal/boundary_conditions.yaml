@@ -12,11 +12,11 @@ thermal:
   liner:
   - type: Robin
     region: inner_radius
-    h_conv: 23858.0       # W/(m2 K) -- h1, neutral, as in G3/G4
-    T_ext: 560.0          # K -- coolant
+    h_conv: 23858.0       # W/(m2 K), h1, neutral, as in G3/G4
+    T_ext: 560.0          # K, coolant
 
   steel:
   - type: Robin
     region: outer_radius
-    h_conv: 1.271         # W/(m2 K) -- U2, neutral, as in G3/G4
-    T_ext: 320.0          # K -- containment water
+    h_conv: 1.271         # W/(m2 K), U2, neutral, as in G3/G4
+    T_ext: 320.0          # K, containment water

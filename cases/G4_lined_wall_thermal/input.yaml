@@ -1,5 +1,5 @@
 # --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
-# Z3ST -- teaching case: temperature field of a lined, gamma-heated wall
+# Z3ST teaching case: temperature field of a lined, gamma-heated wall
 #
 # A neutral liner (4 mm) bonded on a neutral vessel (100 mm), the gamma source entering at
 # the wetted surface, h1 on the wetted surface and U2 on the outer face. The numbers are the
