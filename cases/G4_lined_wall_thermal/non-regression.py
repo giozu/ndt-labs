@@ -153,14 +153,36 @@ print(f"    outer surface   {q_outer:10.1f} W/m{_pct(q_outer)}")
 # --.. ..- .-.. .-.. --- plot --.. ..- .-.. .-.. ---
 x = (r - Ri)*1e3
 fig, ax = plt.subplots(figsize=(8, 5))
+
+# Temperature profile: FE solution (z3st) and reference
 ax.plot(x, T_ana - 273.15, "-", lw=2, color="tab:red", label="reference (K0 quadrature)")
 ax.plot(x[::15], T_fe[::15] - 273.15, "o", ms=5, color="tab:blue", alpha=0.8, label="z3st")
+
+# Horizontal line, the mean metal temperature of the vessel (the same number the check below uses)
+avg = fe["vessel average"]
+ax.hlines(avg - 273.15, 0, (Ro - Ri)*1e3, colors='tab:red', linestyles='--',
+          label=f'mean metal temperature (NCA-2142.1(b)): {avg - 273.15:.1f}°C')
+
+# Maximum temperature of the vessel, and its position from the vessel inner surface
+x_max, T_max = fe["max at r - Ri (mm)"], fe["maximum"]
+ax.plot(x_max, T_max - 273.15, 'o', ms=9, color='tab:red',
+        label=f'vessel maximum: {T_max - 273.15:.1f}°C at {x_max:.1f} mm')
+
+# Horizontal line, the temperature limit of the vessel steel (NB-1120, NB-3112.4)
+# >>> CHANGE HERE: 400 degC is the limit of the NEUTRAL steel of this case
+T_lim = 400.0   # degC
+ax.hlines(T_lim, 0, (Ro - Ri)*1e3, colors='k', linestyles='-.', label=f'temperature limit of the vessel steel: {T_lim:.0f}°C')
+
+# Mark the liner region with a shaded area
 ax.axvspan((Rw - Ri)*1e3, 0.0, color="0.85", label="liner")
+
+# x-y labels, title, grid, legend
 ax.set_xlabel("r - Ri  (mm)   (0 = vessel inner surface)")
 ax.set_ylabel("temperature (°C)")
 ax.set_title(f"Lined wall: vessel average {fe['vessel average'] - 273.15:.1f} °C")
 ax.grid(alpha=0.35); ax.legend(fontsize=9)
 fig.tight_layout()
+
 plot_path = os.path.join(CASE_DIR, "output", "verification.png")
 fig.savefig(plot_path, dpi=200)
 print(f"[INFO] Plot saved in: {plot_path}")
