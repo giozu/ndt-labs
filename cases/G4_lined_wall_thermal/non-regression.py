@@ -10,8 +10,8 @@ h1 on the wetted surface and U2 on the outer face: the thermal model of item 6 o
 assignment, on neutral numbers (section 6 of the G4 notebook).
 
 Reference: the SAME gamma source z3st uses, q'''(r) = q0 K0(mu r)/K0(mu Rw) in both
-layers, integrated radially by quadrature. Steady cylindrical conduction integrates once to
-    r k(r) T'(r) = C - cum(r),        cum(r) = int_Ri^r s q(s) ds,
+layers, integrated radially by quadrature (numerical integration). Steady cylindrical conduction integrates once to
+    r k(r) T'(r) = C - cum(r),        cum(r) = int_Rw^r s q(s) ds,
 valid across the interface because the flux r k T' is continuous there; the two Robin
 conditions fix C and T(Rw). An independent method (quadrature, not finite elements).
 
@@ -41,27 +41,46 @@ def _yaml(name):
     with open(os.path.join(CASE_DIR, name)) as f:
         return yaml.safe_load(f)
 
-
+# --.. ..- .-.. .-.. --- read the case data --.. ..- .-.. .-.. ---
+# read geometry.yaml
 geom = _yaml("geometry.yaml")
 Rw, Ri, Ro, Lz = (float(geom[k]) for k in ("inner_radius", "interface_radius", "outer_radius", "Lz"))
-mats = {n: _yaml(p) for n, p in _yaml("input.yaml")["materials"].items()}
+# in the next lines, we check the radial temperature profile from Rw to Ro.
+# The FE solution is 2-D, in (r, z); the reference is 1-D, in r only. They are compared
+# along the radial line at mid-height, z = Lz/2, far from the top and the bottom (below).
+
+# read input.yaml
+mats = {n: _yaml(p) for n, p in _yaml("input.yaml")["materials"].items()} # this line reads input.yaml and the two materials yaml files it points to
+# mats is a dict of dicts, one card per material, e.g.
+#   {"liner": {"k": 16.0, "mu_gamma": 27.0, "gamma_heating": 2.6e6, ...},
+#    "steel": {"k": 20.0, "mu_gamma": 27.0, "gamma_heating": 2.6e6, ...}}
+# and we can access the properties of each material by name, e.g., mats["liner"]["k"] or mats["steel"]["mu_gamma"]
 k_L, k_V = float(mats["liner"]["k"]), float(mats["steel"]["k"])
 mu, q0 = float(mats["steel"]["mu_gamma"]), float(mats["steel"]["gamma_heating"])
+
+# The reference uses ONE source for both layers: the same mu, and the same q0 (its value at Rw),
+# in the two cards. Stop here if the cards disagree.
 assert float(mats["liner"]["mu_gamma"]) == mu and float(mats["liner"]["gamma_heating"]) == q0, \
     "the reference assumes one mu and one q0 at Rw for both layers"
 
-# h1, U2 and the two fluid temperatures read from the BCs, so the reference cannot drift
+# read boundary_conditions.yaml
+# h1, U2 and the two fluid temperatures read from the BCs, so the reference solution is consistent with the FE solution
 bcs = _yaml("boundary_conditions.yaml")["thermal"]
-_in, _out = bcs["liner"][0], bcs["steel"][0]
+_in = bcs["liner"][0]
+_out = bcs["steel"][0] if "steel" in bcs else {}   # no condition on the outer face: adiabatic, U2 = 0 (T_inf is then irrelevant)
 H1, T_COOL = float(_in["h_conv"]), float(_in["T_ext"])
-U2, T_INF = float(_out["h_conv"]), float(_out["T_ext"])
+U2, T_INF = float(_out.get("h_conv", 0.0)), float(_out.get("T_ext", 0.0))
 
 TOLERANCE = 1.0e-2   # relative, on temperature RISES above the coolant (not on kelvin)
 
 # --.. ..- .-.. .-.. --- analytic reference --.. ..- .-.. .-.. ---
+# radial grid, fine, with Ri (the interface) as a node
 _s = np.unique(np.concatenate([np.linspace(Rw, Ri, 4001), np.linspace(Ri, Ro, 40001)]))
+# conductivity: liner below Ri, vessel above
 _k = np.where(_s < Ri, k_L, k_V)
+# the gamma source q'''(r) = q0 K0(mu r)/K0(mu Rw), as in z3st
 _q = q0*k0(mu*_s)/k0(mu*Rw)
+# cum(r) = int_Rw^r s q(s) ds: the heat generated between Rw and r (per radian, per metre)
 _cum = np.concatenate([[0.0], np.cumsum(0.5*(_s[1:]*_q[1:] + _s[:-1]*_q[:-1])*np.diff(_s))])
 
 
@@ -73,6 +92,8 @@ def _int(f):
 
 J1 = _int(1.0/(_k*_s))          # int 1/(k s)
 J2 = _int(_cum/(_k*_s))         # int cum/(k s)
+# C = Rw k T'(Rw): the heat leaving through the wetted surface, per radian and per metre,
+# so q_inner below is 2 pi C
 # inner Robin:  k T'(Rw) = h1 (T(Rw) - T_cool)  ->  T(Rw) = T_cool + C/(Rw h1)
 # outer Robin: -k T'(Ro) = U2 (T(Ro) - T_inf),  T(Ro) = T(Rw) + C J1(Ro) - J2(Ro)
 C = ((_cum[-1]/Ro - U2*(T_COOL - T_INF - J2[-1]))
@@ -95,12 +116,12 @@ gen = 2.0*np.pi*_cum[-1]                                   # W per metre of heig
 q_inner = 2.0*np.pi*Rw*H1*(T_ref_profile[0] - T_COOL)
 q_outer = 2.0*np.pi*Ro*U2*(T_ref_profile[-1] - T_INF)
 
-# --.. ..- .-.. .-.. --- extract the FE solution --.. ..- .-.. .-.. ---
+# --.. ..- .-.. .-.. --- extract the finite element (FE) solution --.. ..- .-.. .-.. ---
 if not os.path.exists(VTU_FILE):
     raise SystemExit(f"[FAIL] no result to check: {VTU_FILE}\n       run ./Allrun first.")
 
-grid = pv.read(VTU_FILE)
-line = grid.sample_over_line((Rw, Lz/2.0, 0.0), (Ro, Lz/2.0, 0.0), resolution=1040)
+grid = pv.read(VTU_FILE) # the grid is a pyvista.UnstructuredGrid object, which has points, cells, and point_data (the fields)
+line = grid.sample_over_line((Rw, Lz/2.0, 0.0), (Ro, Lz/2.0, 0.0), resolution=1040) # we sample the grid along a line from (Rw, Lz/2, 0) to (Ro, Lz/2, 0) with 1040 points
 T_all = np.asarray(line["Temperature"])
 # sample_over_line returns ZEROS outside the mesh: drop them before any integral
 ok = np.asarray(line["vtkValidPointMask"]).astype(bool) & (T_all > 1.0)

@@ -5,7 +5,6 @@
 #  - vessel outer surface: insulation + natural convection in series,
 #        -k dT/dr =  U2 (T - T_inf)         U2 from G3, referred to r = Ro
 #
-# The steel is NOT in U2: it carries the gamma source and is the domain solved here.
 # Top and bottom are left adiabatic (the default): the field is radial.
 
 thermal:
