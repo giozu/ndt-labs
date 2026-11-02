@@ -20,6 +20,7 @@ ndt_setup.py
 # The session READMEs, sessions/README.md and cases/README.md are TA notes: never publish them.
 cases/*
 !cases/G4_lined_wall_thermal/
+!cases/interactive_gui.ipynb
 sessions/*
 !sessions/G01_kickoff/
 !sessions/G02_shells/
