@@ -1,0 +1,19 @@
+name: steel_neutral
+
+# Generic vessel steel for the teaching case. NEUTRAL numbers, the same as the other cases.
+# gamma_heating is the value at the WETTED surface (gamma_inner_radius), the reference of the
+# K0 profile for BOTH materials: with one mu the source is continuous across the interface,
+# and the vessel inner surface receives the attenuated value by itself.
+
+E: 1.90e+11           # Young's modulus (Pa)
+nu: 0.30              # Poisson's ratio (-)
+k: 20.0               # Thermal conductivity (W/m·K)
+cp: 500.0             # Specific heat capacity (J/kg·K)
+alpha: 1.6e-5         # Thermal expansion coefficient (1/K)
+rho: 7900.0           # Density (kg/m³)
+T_ref: 560.0          # Reference (stress-free) temperature (K)
+mu_gamma: 27.0        # Gamma linear attenuation coefficient (1/m)
+gamma_heating: 1.734e+6    # W/m3 at the wetted surface: q0 = 2.6e6 attenuated by the shield, 2.6e6*exp(-mu*t_s) = 2.6e6*exp(-27*0.015)
+                           # z3st does NOT attenuate from one body to the next: CHANGE HERE if t_s or mu change
+gamma_inner_radius: 0.296  # m, the radius where gamma_heating applies (the wetted surface); without it z3st would use the
+                           # geometry inner_radius, here the shield inner face (0.260)

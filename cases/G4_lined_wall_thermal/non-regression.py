@@ -17,7 +17,6 @@ conditions fix C and T(Rw). An independent method (quadrature, not finite elemen
 
 Writes output/non-regression.json and output/verification.png
 """
-import json
 import os
 
 import matplotlib
@@ -60,6 +59,7 @@ mu, q0 = float(mats["steel"]["mu_gamma"]), float(mats["steel"]["gamma_heating"])
 
 # The reference uses ONE source for both layers: the same mu, and the same q0 (its value at Rw),
 # in the two cards. Stop here if the cards disagree.
+# mu and q0, read above from the steel card
 assert float(mats["liner"]["mu_gamma"]) == mu and float(mats["liner"]["gamma_heating"]) == q0, \
     "the reference assumes one mu and one q0 at Rw for both layers"
 
@@ -74,21 +74,23 @@ U2, T_INF = float(_out.get("h_conv", 0.0)), float(_out.get("T_ext", 0.0))
 TOLERANCE = 1.0e-2   # relative, on temperature RISES above the coolant (not on kelvin)
 
 # --.. ..- .-.. .-.. --- analytic reference --.. ..- .-.. .-.. ---
+
+# Calculation of T(r) "quadrature", reference solution
 # radial grid, fine, with Ri (the interface) as a node
 _s = np.unique(np.concatenate([np.linspace(Rw, Ri, 4001), np.linspace(Ri, Ro, 40001)]))
 # conductivity: liner below Ri, vessel above
 _k = np.where(_s < Ri, k_L, k_V)
 # the gamma source q'''(r) = q0 K0(mu r)/K0(mu Rw), as in z3st
 _q = q0*k0(mu*_s)/k0(mu*Rw)
-# cum(r) = int_Rw^r s q(s) ds: the heat generated between Rw and r (per radian, per metre)
-_cum = np.concatenate([[0.0], np.cumsum(0.5*(_s[1:]*_q[1:] + _s[:-1]*_q[:-1])*np.diff(_s))])
-
 
 def _int(f):
     """Running trapezoid from Rw. k jumps at Ri, which is a grid node: 1/k is taken as the
     average of the two sides only on the one interval that touches it, a 1e-5 error."""
     return np.concatenate([[0.0], np.cumsum(0.5*(f[1:] + f[:-1])*np.diff(_s))])
 
+# cum(r) = int_Rw^r s q'''(s) ds: the heat generated between Rw and r (per radian, per metre)
+# dV = r dtheta dr dz, int q''' dV = int int 2 pi r q''' dr dz (the factor 2 pi is added later, we don't multiply by dz)
+_cum = _int(_s*_q)
 
 J1 = _int(1.0/(_k*_s))          # int 1/(k s)
 J2 = _int(_cum/(_k*_s))         # int cum/(k s)
@@ -100,46 +102,56 @@ C = ((_cum[-1]/Ro - U2*(T_COOL - T_INF - J2[-1]))
      / (1.0/Ro + U2*(1.0/(Rw*H1) + J1[-1])))
 T_ref_profile = T_COOL + C/(Rw*H1) + C*J1 - J2
 
-
+# function to return the reference temperature profile
 def T_profile(r):
     return np.interp(r, _s, T_ref_profile)
 
 
-def vessel_average(r, T):
-    """Volume-weighted average over the VESSEL only, int T r dr / int r dr on Ri..Ro:
+# support function, to compute the average temperature in
+# cylindrical coordinates
+def average(r, T, a, b):
+    """Volume-weighted average on a..b, int T r dr / int r dr: on the vessel (Ri..Ro) it is
     the quantity the design temperature is defined on (item 8)."""
-    m = r >= Ri
+    m = (r >= a) & (r <= b)
     return np.trapezoid(T[m]*r[m], r[m])/np.trapezoid(r[m], r[m])
 
-
-gen = 2.0*np.pi*_cum[-1]                                   # W per metre of height
+# Heat balance
+# gen = int 2 pi r q''' dr
+gen = 2.0*np.pi*_cum[-1] # W per metre of height (no dz)
+# q_inner, heat leaving the wetted surface
 q_inner = 2.0*np.pi*Rw*H1*(T_ref_profile[0] - T_COOL)
+# q_outer, heat leaving the outer surface
 q_outer = 2.0*np.pi*Ro*U2*(T_ref_profile[-1] - T_INF)
 
 # --.. ..- .-.. .-.. --- extract the finite element (FE) solution --.. ..- .-.. .-.. ---
 if not os.path.exists(VTU_FILE):
     raise SystemExit(f"[FAIL] no result to check: {VTU_FILE}\n       run ./Allrun first.")
 
-grid = pv.read(VTU_FILE) # the grid is a pyvista.UnstructuredGrid object, which has points, cells, and point_data (the fields)
-line = grid.sample_over_line((Rw, Lz/2.0, 0.0), (Ro, Lz/2.0, 0.0), resolution=1040) # we sample the grid along a line from (Rw, Lz/2, 0) to (Ro, Lz/2, 0) with 1040 points
-T_all = np.asarray(line["Temperature"])
-# sample_over_line returns ZEROS outside the mesh: drop them before any integral
-ok = np.asarray(line["vtkValidPointMask"]).astype(bool) & (T_all > 1.0)
-r, T_fe = line.points[ok, 0], T_all[ok]
-o = np.argsort(r)
-r, T_fe = r[o], T_fe[o]
-print(f"[INFO] {ok.sum()} of {len(ok)} probe points inside the mesh")
+def probe(vtu, a, b, n):
+    """T along the radial line a..b at mid-height (Lz/2), sorted by r."""
+    grid = pv.read(vtu) # a pyvista.UnstructuredGrid: points, cells, and point_data (the fields)
+    line = grid.sample_over_line((a, Lz/2.0, 0.0), (b, Lz/2.0, 0.0), resolution=n) # n points from (a, Lz/2, 0) to (b, Lz/2, 0)
+    T_all = np.asarray(line["Temperature"])
+    # sample_over_line returns ZEROS outside the mesh: drop them before any integral
+    ok = np.asarray(line["vtkValidPointMask"]).astype(bool) & (T_all > 1.0)
+    r, T = line.points[ok, 0], T_all[ok]
+    o = np.argsort(r)
+    return r[o], T[o]
+
+
+r, T_fe = probe(VTU_FILE, Rw, Ro, 1040)        # liner + vessel
+print(f"[INFO] {len(r)} probe points inside the mesh")
 T_ana = T_profile(r)
 
 # --.. ..- .-.. .-.. --- the numbers item 6 asks for --.. ..- .-.. .-.. ---
-def report(Tf):
-    i = int(np.argmax(Tf))
-    return {"wetted surface": Tf[0], "vessel inner surface": np.interp(Ri, r, Tf),
-            "vessel outer surface": Tf[-1], "maximum": Tf[i], "max at r - Ri (mm)": (r[i] - Ri)*1e3,
-            "vessel average": vessel_average(r, Tf)}
+def report(r, T):
+    i = int(np.argmax(T))
+    return {"wetted surface": T[0], "vessel inner surface": np.interp(Ri, r, T),
+            "vessel outer surface": T[-1], "maximum": T[i], "max at r - Ri (mm)": (r[i] - Ri)*1e3,
+            "vessel average": average(r, T, Ri, Ro)}
 
 
-fe, an = report(T_fe), report(T_ana)
+fe, an = report(r, T_fe), report(r, T_ana)
 print(f"\n  {'':28}{'z3st':>10}{'reference':>11}")
 for key in fe:
     unit = "" if "mm" in key else "  K"

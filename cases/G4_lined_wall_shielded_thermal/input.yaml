@@ -1,0 +1,44 @@
+# --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
+# Z3ST teaching case: temperature field of a SHIELDED, lined, gamma-heated wall
+#
+# The lined wall of G4_lined_wall_thermal with a neutral thermal shield (15 mm) in the
+# downcomer. The shield takes the full gamma source and passes on exp(-mu t_s) of it to the
+# wall; both shield faces and the wetted surface are cooled with the two channel coefficients
+# of G3, section 5 (the flow split by equal pressure drop).
+#
+# THERMAL ONLY.
+# --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
+
+mesh_path: mesh.msh
+geometry_path: geometry.yaml
+boundary_conditions_path: boundary_conditions.yaml
+
+materials:
+  shield: shield_neutral.yaml
+  liner: liner_neutral.yaml
+  steel: steel_neutral.yaml
+
+regime: axisymmetric
+
+solver_settings:
+  coupling: staggered
+  max_iters: 100
+  relax_T: 1.0
+  relax_adaptive: false
+
+models:
+  thermal: true
+  mechanical: false
+
+thermal:
+  solver: linear
+  linear_solver: direct_mumps
+  rtol: 1.0e-10
+  stag_tol: 1.0e-10
+  convergence: rel_norm
+
+lhr:
+- 0.0
+time:
+- 0.0
+n_steps: 1

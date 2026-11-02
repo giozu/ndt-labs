@@ -6,6 +6,7 @@
 //
 // --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
 
+// liner+vessel
 Rw = 0.296;  // wetted surface (m)
 Ri = 0.300;  // vessel inner surface (m)
 Ro = 0.400;  // vessel outer surface (m)

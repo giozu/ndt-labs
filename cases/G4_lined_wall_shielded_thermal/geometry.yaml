@@ -1,0 +1,24 @@
+name: shielded_lined_gamma_heated_cylinder
+geometry_type: cyl
+
+# Three bodies, from the axis outwards: the thermal shield, the coolant channel (NOT meshed:
+# it enters as the Robin conditions), the liner and the vessel.
+inner_radius: 0.260         # shield inner face (m), the innermost meshed surface
+shield_outer_radius: 0.275  # shield outer face (m): shield 15 mm
+wetted_radius: 0.296        # wetted surface, inner face of the liner (m)
+interface_radius: 0.300     # vessel inner surface, liner-vessel interface (m)
+outer_radius: 0.400         # vessel outer surface (m)
+Lz: 2.000                   # height (m)
+# Each material card says where its own gamma source is referred (gamma_inner_radius):
+# the shield at its inner face, liner and vessel at the wetted surface.
+
+labels:
+  shield_inner: 5
+  shield_outer: 6
+  wetted_surface: 1
+  outer_radius: 2
+  bottom: 3
+  top: 4
+  liner: 10
+  steel: 11
+  shield: 12
