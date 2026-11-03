@@ -158,7 +158,8 @@ ax.hlines(T_lim, 0, (Ro - Ri)*1e3, colors='k', linestyles='-.', label=f'temperat
 # Mark the shield, the coolant channel and the liner with shaded areas
 ax.axvspan((Rs - Ri)*1e3, (Rso - Ri)*1e3, color="tab:green", alpha=0.12, label="shield")
 ax.axvspan((Rso - Ri)*1e3, (Rw - Ri)*1e3, color="tab:cyan", alpha=0.12, label="coolant (not meshed)")
-ax.axvspan((Rw - Ri)*1e3, 0.0, color="0.85", label="liner")
+ax.axvspan((Rw - Ri)*1e3, 0.0, color="0.75", label="liner")
+ax.axvspan(0.0, (Ro - Ri)*1e3, color="0.9", label="vessel")
 
 # x-y labels, title, grid, legend
 ax.set_xlabel("r - Ri  (mm)   (0 = vessel inner surface)")
