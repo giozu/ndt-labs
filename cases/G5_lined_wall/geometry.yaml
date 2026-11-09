@@ -1,0 +1,16 @@
+name: lined_gamma_heated_cylinder
+geometry_type: cyl
+
+inner_radius: 0.296      # wetted surface, inner face of the liner (m): z3st reads this key 'inner_radius', and
+                         # normalises the gamma source here
+interface_radius: 0.300  # vessel inner surface, liner-vessel interface (m)
+outer_radius: 0.400      # vessel outer surface (m)
+Lz: 2.000 # height (m)
+
+labels:
+  inner_radius: 1
+  outer_radius: 2
+  bottom: 3
+  top: 4
+  liner: 10
+  steel: 11

@@ -23,7 +23,6 @@ cases/*
 !cases/G4_lined_wall_shielded_thermal/
 !cases/interactive_gui.ipynb
 sessions/*
-!sessions/G01_kickoff/
 !sessions/G02_shells/
 !sessions/G03_heat_transfer/
 !sessions/G04_gamma_temperature/
@@ -31,6 +30,9 @@ sessions/*/README.md
 launcher/*
 !launcher/ndt_setup.py
 !launcher/README.md
+!cases/G5_lined_wall/
+!cases/G5_lined_wall_shielded/
+!sessions/G05_fe_model/
 
 # a group's own working folder (ndt_setup.workdir), created at run time
 ndt-work/

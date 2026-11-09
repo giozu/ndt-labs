@@ -1,0 +1,36 @@
+# Temperature field of the lined wall: the boundary conditions of the assignment.
+#
+#  - wetted surface (inner face of the liner): forced convection to the coolant,
+#        -k dT/dr = -h1 (T - T_cool)        h1 from Dittus-Boelter (G3)
+#  - vessel outer surface: insulation + natural convection in series,
+#        -k dT/dr =  U2 (T - T_inf)         U2 from G3, referred to r = Ro
+#
+# Top and bottom are left adiabatic (the default): the field is radial.
+
+thermal:
+  liner:
+  - type: Robin
+    region: inner_radius
+    h_conv: 23858.0       # W/(m2 K), h1, neutral, as in G3/G4
+    T_ext: 560.0          # K, coolant
+
+  steel:
+  - type: Robin
+    region: outer_radius
+    h_conv: 1.271         # W/(m2 K), U2, neutral, as in G3/G4
+    T_ext: 320.0          # K, containment water
+
+# Mechanics (G5). Each condition is written ONCE: z3st applies it to the whole tagged
+# boundary, whatever the material it is listed under: listing it under both would apply it twice.
+mechanical:
+  steel:
+  - type: Neumann         # internal pressure P = 15 MPa on the wetted surface (t = -P n)
+    region: inner_radius
+    traction: -1.5e+7     # Pa
+
+  - type: Neumann         # closed-end axial stress on the top face, P Rw^2/(Ro^2 - Rw^2)
+    region: top
+    traction: 1.815650e+07  # Pa
+
+  - type: Clamp_y         # remove the axial rigid-body motion
+    region: bottom
