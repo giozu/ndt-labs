@@ -33,6 +33,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import yaml
+from scipy.integrate import cumulative_trapezoid
 from scipy.special import k0
 
 from z3st.utils.utils_verification import pass_fail_check, regression_check
@@ -43,98 +44,145 @@ CASE_DIR = os.path.dirname(os.path.abspath(__file__))
 VTU_FILE = os.path.join(CASE_DIR, "output", "fields.vtu")
 OUT_JSON = os.path.join(CASE_DIR, "output", "non-regression.json")
 
-
 def _yaml(name):
     with open(os.path.join(CASE_DIR, name)) as f:
         return yaml.safe_load(f)
 
-
+# reading geometry.yaml
 geom = _yaml("geometry.yaml")
-Rw, Ri, Ro, Lz = (float(geom[k]) for k in ("inner_radius", "interface_radius", "outer_radius", "Lz"))
-mats = {n: _yaml(p) for n, p in _yaml("input.yaml")["materials"].items()}
-L, V = mats["liner"], mats["steel"]
-mu, q0 = float(V["mu_gamma"]), float(V["gamma_heating"])
-assert float(L["mu_gamma"]) == mu and float(L["gamma_heating"]) == q0
-assert float(L["T_ref"]) == float(V["T_ref"]), "one stress-free temperature for both layers"
-T_REF = float(V["T_ref"])
+Rw = float(geom["inner_radius"])        # wetted surface (liner inner face)
+Ri = float(geom["interface_radius"])    # liner-vessel interface
+Ro = float(geom["outer_radius"])        # vessel outer surface
+Lz = float(geom["Lz"])
 
+# reading the two material cards, as listed in input.yaml
+materials = _yaml("input.yaml")["materials"]
+L = _yaml(materials["liner"])
+V = _yaml(materials["steel"])
+
+# gamma source: one profile across the whole wall, so the two cards must agree
+mu = float(V["mu_gamma"])
+q0 = float(V["gamma_heating"])
+assert float(L["mu_gamma"]) == mu, "liner and vessel must have the same mu_gamma"
+assert float(L["gamma_heating"]) == q0, "liner and vessel must have the same gamma_heating"
+
+# stress-free temperature: one for both layers
+T_REF = float(V["T_ref"])
+assert float(L["T_ref"]) == T_REF, "liner and vessel must have the same T_ref"
+
+# reading boundary_conditions.yaml
 bcs = _yaml("boundary_conditions.yaml")
-_in = bcs["thermal"]["liner"][0]
-_out = bcs["thermal"]["steel"][0] if "steel" in bcs["thermal"] else {}   # no condition on the outer face: adiabatic, U2 = 0
-H1, T_COOL = float(_in["h_conv"]), float(_in["T_ext"])
-U2, T_INF = float(_out.get("h_conv", 0.0)), float(_out.get("T_ext", 0.0))
-mech = {bc["region"]: bc for bc in bcs["mechanical"]["steel"] if bc["type"] == "Neumann"}
-P = -float(mech["inner_radius"]["traction"])
-assert abs(float(mech["top"]["traction"])/(P*Rw**2/(Ro**2 - Rw**2)) - 1) < 1e-5, "top load is not the closed-end one"
+
+# thermal
+# wetted surface (liner): convection to the coolant
+bc_in = bcs["thermal"]["liner"][0]
+H1 = float(bc_in["h_conv"])
+T_COOL = float(bc_in["T_ext"])
+
+# outer surface (steel): insulation + containment water
+bc_out = bcs["thermal"]["steel"][0]
+U2 = float(bc_out["h_conv"])
+T_INF = float(bc_out["T_ext"])
+
+# mechanical
+# wetted surface (liner): internal pressure
+bc_p = bcs["mechanical"]["liner"][0]
+P = -float(bc_p["traction"])
+
+# top face (steel): closed-end axial load
+bc_top = bcs["mechanical"]["steel"][0]
+top_load = float(bc_top["traction"])
+
+closed_end = P*Rw**2/(Ro**2 - Rw**2)
+assert abs(top_load/closed_end - 1) < 1e-5, "top load is not the closed-end one"
 
 TOLERANCE = 1.0e-2
 I_RR, I_TT, I_ZZ = 0, 4, 8          # (r, theta, z): 4 is the HOOP component, 8 is axial
 
 # --.. ..- .-.. .-.. --- reference temperature (two layers, K0 source) --.. ..- .-.. .-.. ---
+# Steady conduction with a source:   d/dr (k r dT/dr) = -q r
+# Integrated once from the wetted surface:   k r dT/dr = F - Q(r)
+#   Q(r) = int_Rw^r q r' dr'    the heat generated between Rw and r (per radian and metre)
+#   F    = k r dT/dr at Rw      the heat leaving through the wetted surface (unknown)
+# Integrated again:   T(r) = Tw + F J1(r) - J2(r),   J1 = int dr/(k r),   J2 = int Q/(k r) dr
+# The two unknowns, Tw = T(Rw) and F, are fixed by the convection on the two faces.
+
+# radial grid: the liner and the vessel, each with its own points
 s = np.unique(np.concatenate([np.linspace(Rw, Ri, 4001), np.linspace(Ri, Ro, 40001)]))
-kk = np.where(s < Ri, float(L["k"]), float(V["k"]))
-q = q0*k0(mu*s)/k0(mu*Rw)
+k_s = np.where(s < Ri, float(L["k"]), float(V["k"]))   # conductivity at each point
+q = q0*k0(mu*s)/k0(mu*Rw)                              # gamma source, the same K0 profile z3st uses
 
+Q = cumulative_trapezoid(q*s, s, initial=0.0)
+J1 = cumulative_trapezoid(1.0/(k_s*s), s, initial=0.0)
+J2 = cumulative_trapezoid(Q/(k_s*s), s, initial=0.0)
 
-def _int(f):
-    return np.concatenate([[0.0], np.cumsum(0.5*(f[1:] + f[:-1])*np.diff(s))])
+# wetted surface:  k dT/dr = H1 (T - T_COOL)    ->  Tw - F/(Rw H1) = T_COOL
+# outer surface:  -k dT/dr = U2 (T - T_INF)     ->  U2 Tw + (U2 J1 + 1/Ro) F = Q/Ro + U2 (J2 + T_INF)
+A_T = np.array([[1.0, -1.0/(Rw*H1)],
+                [U2,  U2*J1[-1] + 1.0/Ro]])
+b_T = np.array([T_COOL,
+                Q[-1]/Ro + U2*(J2[-1] + T_INF)])
+Tw, F = np.linalg.solve(A_T, b_T)
 
-
-cum = _int(s*q)
-J1, J2 = _int(1.0/(kk*s)), _int(cum/(kk*s))
-C = (cum[-1]/Ro - U2*(T_COOL - T_INF - J2[-1]))/(1.0/Ro + U2*(1.0/(Rw*H1) + J1[-1]))
-T_s = T_COOL + C/(Rw*H1) + C*J1 - J2
+T_s = Tw + F*J1 - J2
 
 # --.. ..- .-.. .-.. --- reference stresses (composite cylinder) --.. ..- .-.. .-.. ---
-def layer(m, mask, r0):
-    """Displacement and stresses in one layer as an affine function of (C1, C2, eps_z)."""
+# In each layer, generalised plane strain (eps_z the same everywhere):
+#   u(r) = (1+nu)/(1-nu) alpha I(r)/r + C1 r + C2/r,    I(r) = int dT r dr from the layer inner face
+# Five unknowns: C1 and C2 in the liner, C1 and C2 in the vessel, eps_z.
+
+rL, rV = s[s <= Ri], s[s >= Ri]                        # the two layers share the point Ri
+dT_L = np.interp(rL, s, T_s) - T_REF
+dT_V = np.interp(rV, s, T_s) - T_REF
+
+
+def layer(m, r, dT, C1, C2, ez):
+    """Displacement and the three stresses in one layer, for given C1, C2 and eps_z."""
     E, nu, al = float(m["E"]), float(m["nu"]), float(m["alpha"])
-    lam, G = E*nu/((1 + nu)*(1 - 2*nu)), E/(2*(1 + nu))
-    r, dT = s[mask], T_s[mask] - T_REF
-    I = np.concatenate([[0.0], np.cumsum(0.5*(dT[1:]*r[1:] + dT[:-1]*r[:-1])*np.diff(r))])
-    k_ = (1 + nu)/(1 - nu)*al
-    up, dup = k_*I/r, k_*(dT - I/r**2)            # particular u and du/dr
-    th = (3*lam + 2*G)*al*dT
-    # columns: constant part, C1, C2, eps_z
-    u = np.stack([up, r, 1/r, 0*r])
-    er = np.stack([dup, np.ones_like(r), -1/r**2, 0*r])
-    et = u/r
-    ez = np.stack([0*r, 0*r, 0*r, np.ones_like(r)])
-    tr = er + et + ez
-    srr, stt, szz = lam*tr + 2*G*er, lam*tr + 2*G*et, lam*tr + 2*G*ez
-    for a in (srr, stt, szz):
-        a[0] -= th
-    return r, u, srr, stt, szz
+    lam = E*nu/((1 + nu)*(1 - 2*nu))
+    G = E/(2*(1 + nu))
+
+    I = cumulative_trapezoid(dT*r, r, initial=0.0)
+    kappa = (1 + nu)/(1 - nu)*al
+
+    u = kappa*I/r + C1*r + C2/r
+    e_rr = kappa*(dT - I/r**2) + C1 - C2/r**2          # du/dr
+    e_tt = u/r
+    e_zz = ez
+    trace = e_rr + e_tt + e_zz
+    thermal = (3*lam + 2*G)*al*dT
+
+    s_rr = lam*trace + 2*G*e_rr - thermal
+    s_tt = lam*trace + 2*G*e_tt - thermal
+    s_zz = lam*trace + 2*G*e_zz - thermal
+    return u, s_rr, s_tt, s_zz
 
 
-mL, mV = s <= Ri, s >= Ri
-rL, uL, rrL, ttL, zzL = layer(L, mL, Rw)
-rV, uV, rrV, ttV, zzV = layer(V, mV, Ri)
+def conditions(x):
+    """The five conditions, written as 'left side - right side'; all zero at the solution."""
+    C1L, C2L, C1V, C2V, ez = x
+    uL, rrL, ttL, zzL = layer(L, rL, dT_L, C1L, C2L, ez)
+    uV, rrV, ttV, zzV = layer(V, rV, dT_V, C1V, C2V, ez)
+    axial_force = np.trapezoid(zzL*2*np.pi*rL, rL) + np.trapezoid(zzV*2*np.pi*rV, rV)
+    return np.array([
+        rrL[0] + P,                       # wetted surface: sigma_rr = -P
+        rrV[-1],                          # outer surface: sigma_rr = 0
+        uL[-1] - uV[0],                   # interface: same displacement
+        rrL[-1] - rrV[0],                 # interface: same radial stress
+        axial_force - P*np.pi*Rw**2,      # closed end: axial force = P pi Rw^2
+    ])
 
 
-def lift(arr, which):
-    """Embed a 4-row layer array into the 6-column unknown space (1, C1L, C2L, C1V, C2V, ez)."""
-    out = np.zeros((6, arr.shape[1]))
-    out[0] = arr[0]
-    out[[1, 2] if which == "L" else [3, 4]] = arr[1:3]
-    out[5] = arr[3]
-    return out
+# The conditions are linear in the five unknowns: build the matrix one column at a time,
+# switching on one unknown at a time, then solve.
+c0 = conditions(np.zeros(5))
+A_u = np.column_stack([conditions(np.eye(5)[j]) - c0 for j in range(5)])
+x = np.linalg.solve(A_u, -c0)
 
-
-uL6, rrL6, ttL6, zzL6 = (lift(a, "L") for a in (uL, rrL, ttL, zzL))
-uV6, rrV6, ttV6, zzV6 = (lift(a, "V") for a in (uV, rrV, ttV, zzV))
-
-
-def area_int(f6, r):                          # int f 2 pi r dr, row by row
-    return np.trapezoid(f6*2*np.pi*r, r, axis=1)
-
-
-A = np.array([rrL6[1:, 0], rrV6[1:, -1], uL6[1:, -1] - uV6[1:, 0], rrL6[1:, -1] - rrV6[1:, 0],
-              area_int(zzL6, rL)[1:] + area_int(zzV6, rV)[1:]])
-b = -np.array([rrL6[0, 0] + P, rrV6[0, -1], uL6[0, -1] - uV6[0, 0], rrL6[0, -1] - rrV6[0, 0],
-               area_int(zzL6, rL)[0] + area_int(zzV6, rV)[0] - P*np.pi*Rw**2])
-x = np.concatenate([[1.0], np.linalg.solve(A, b)])
-ref = {"L": (rL, x @ rrL6, x @ ttL6, x @ zzL6), "V": (rV, x @ rrV6, x @ ttV6, x @ zzV6)}
+C1L, C2L, C1V, C2V, ez = x
+_, rrL, ttL, zzL = layer(L, rL, dT_L, C1L, C2L, ez)
+_, rrV, ttV, zzV = layer(V, rV, dT_V, C1V, C2V, ez)
+ref = {"L": (rL, rrL, ttL, zzL), "V": (rV, rrV, ttV, zzV)}
 
 
 def ref_at(r, comp):
