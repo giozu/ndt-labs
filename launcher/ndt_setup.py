@@ -544,13 +544,17 @@ def check_environment():
 
 
 def run_case(case_dir, mesh_dim='-2'):
-    """gmsh -> solve -> non-regression, showing output. 
+    """gmsh -> solve -> non-regression, showing output.
+    The self-check runs only if the case has a non-regression.py.
     Returns True on PASS."""
     if not os.path.isdir(case_dir):
         raise SystemExit(f'no such case: {case_dir}')
     steps = [(['gmsh', 'mesh.geo', mesh_dim, '-o', 'mesh.msh'], 'mesh'),
-             ([sys.executable, '-m', 'z3st'], 'solve'),
-             ([sys.executable, 'non-regression.py'], 'self-check')]
+             ([sys.executable, '-m', 'z3st'], 'solve')]
+    if os.path.isfile(os.path.join(case_dir, 'non-regression.py')):
+        steps.append(([sys.executable, 'non-regression.py'], 'self-check'))
+    else:
+        print('no non-regression.py in this case: mesh and solve only')
     for cmd, label in steps:
         print(f'\n$ {" ".join(cmd)}')
         r = subprocess.run(cmd, cwd=case_dir, capture_output=True, text=True)

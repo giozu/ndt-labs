@@ -21,17 +21,16 @@ thermal:
     h_conv: 1.271         # W/(m2 K), U2, neutral, as in G3/G4
     T_ext: 320.0          # K, containment water
 
-# Mechanics (G5). Each condition is written ONCE: z3st applies it to the whole tagged
-# boundary, whatever the material it is listed under: listing it under both would apply it twice.
 mechanical:
   steel:
-  - type: Neumann         # internal pressure P = 15 MPa on the wetted surface (t = -P n)
-    region: inner_radius
-    traction: -1.5e+7     # Pa
-
   - type: Neumann         # closed-end axial stress on the top face, P Rw^2/(Ro^2 - Rw^2)
     region: top
     traction: 1.815650e+07  # Pa
 
   - type: Clamp_y         # remove the axial rigid-body motion
     region: bottom
+
+  liner:
+  - type: Neumann         # internal pressure P = 15 MPa on the wetted surface (t = -P n)
+    region: inner_radius  # the label 'inner_radius' refers to the wetted radius of the liner
+    traction: -1.5e+7     # Pa
