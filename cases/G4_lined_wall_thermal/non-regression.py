@@ -41,35 +41,40 @@ def _yaml(name):
         return yaml.safe_load(f)
 
 # --.. ..- .-.. .-.. --- read the case data --.. ..- .-.. .-.. ---
-# read geometry.yaml
+# reading geometry.yaml
 geom = _yaml("geometry.yaml")
-Rw, Ri, Ro, Lz = (float(geom[k]) for k in ("inner_radius", "interface_radius", "outer_radius", "Lz"))
-# in the next lines, we check the radial temperature profile from Rw to Ro.
+Rw = float(geom["inner_radius"])        # wetted surface (liner inner face)
+Ri = float(geom["interface_radius"])    # liner-vessel interface
+Ro = float(geom["outer_radius"])        # vessel outer surface
+Lz = float(geom["Lz"])
 # The FE solution is 2-D, in (r, z); the reference is 1-D, in r only. They are compared
-# along the radial line at mid-height, z = Lz/2, far from the top and the bottom (below).
+# along the radial line at mid-height, z = Lz/2, far from the top and the bottom.
 
-# read input.yaml
-mats = {n: _yaml(p) for n, p in _yaml("input.yaml")["materials"].items()} # this line reads input.yaml and the two materials yaml files it points to
-# mats is a dict of dicts, one card per material, e.g.
-#   {"liner": {"k": 16.0, "mu_gamma": 27.0, "gamma_heating": 2.6e6, ...},
-#    "steel": {"k": 20.0, "mu_gamma": 27.0, "gamma_heating": 2.6e6, ...}}
-# and we can access the properties of each material by name, e.g., mats["liner"]["k"] or mats["steel"]["mu_gamma"]
-k_L, k_V = float(mats["liner"]["k"]), float(mats["steel"]["k"])
-mu, q0 = float(mats["steel"]["mu_gamma"]), float(mats["steel"]["gamma_heating"])
+# reading the two material cards, as listed in input.yaml
+materials = _yaml("input.yaml")["materials"]
+L = _yaml(materials["liner"])
+V = _yaml(materials["steel"])
+k_L = float(L["k"])
+k_V = float(V["k"])
 
-# The reference uses ONE source for both layers: the same mu, and the same q0 (its value at Rw),
-# in the two cards. Stop here if the cards disagree.
-# mu and q0, read above from the steel card
-assert float(mats["liner"]["mu_gamma"]) == mu and float(mats["liner"]["gamma_heating"]) == q0, \
-    "the reference assumes one mu and one q0 at Rw for both layers"
+# gamma source: one profile across the whole wall, so the two cards must agree
+mu = float(V["mu_gamma"])
+q0 = float(V["gamma_heating"])
+assert float(L["mu_gamma"]) == mu, "liner and vessel must have the same mu_gamma"
+assert float(L["gamma_heating"]) == q0, "liner and vessel must have the same gamma_heating"
 
-# read boundary_conditions.yaml
-# h1, U2 and the two fluid temperatures read from the BCs, so the reference solution is consistent with the FE solution
-bcs = _yaml("boundary_conditions.yaml")["thermal"]
-_in = bcs["liner"][0]
-_out = bcs["steel"][0] if "steel" in bcs else {}   # no condition on the outer face: adiabatic, U2 = 0 (T_inf is then irrelevant)
-H1, T_COOL = float(_in["h_conv"]), float(_in["T_ext"])
-U2, T_INF = float(_out.get("h_conv", 0.0)), float(_out.get("T_ext", 0.0))
+# reading boundary_conditions.yaml
+bcs = _yaml("boundary_conditions.yaml")
+
+# wetted surface (liner): convection to the coolant
+bc_in = bcs["thermal"]["liner"][0]
+H1 = float(bc_in["h_conv"])
+T_COOL = float(bc_in["T_ext"])
+
+# outer surface (steel): insulation + containment water
+bc_out = bcs["thermal"]["steel"][0]
+U2 = float(bc_out["h_conv"])
+T_INF = float(bc_out["T_ext"])
 
 TOLERANCE = 1.0e-2   # relative, on temperature RISES above the coolant (not on kelvin)
 
