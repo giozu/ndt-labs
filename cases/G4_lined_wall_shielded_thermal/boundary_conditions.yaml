@@ -1,35 +1,34 @@
-# Temperature field of the shielded, lined wall. The coolant is not meshed: it flows in two
-# channels, barrel-shield and shield-liner, and enters as convection on every wetted face,
-#        -k dT/dn = h (T - T_cool)
-#
-#  - shield inner face:    h_in,  the barrel-shield channel   (G3, section 5)
-#  - shield outer face:    h_out, the shield-liner channel    (G3, section 5)
-#  - wetted surface:       h_out, the same channel, on its other wall
-#  - vessel outer surface: U2, insulation + natural convection, referred to r = Ro (G3)
-#
-# Top and bottom are left adiabatic (the default): the field is radial.
-# The coolant is at ONE temperature everywhere: the shield and the vessel exchange no heat
-# with each other. What couples them is the gamma source only (the material cards).
-
 thermal:
   shield:
+  # - shield inner face: forced convection, barrel-shield channel,
+  #       -k dT/dr = -h_in (T - T_cool)
   - type: Robin
     region: shield_inner
-    h_conv: 39302.0       # W/(m2 K), h_in, neutral, G3 section 5
+    h_conv: 39302.0       # W/(m2 K), heat transfer coefficient h_in
     T_ext: 560.0          # K, coolant
+
+  # - shield outer face: forced convection, shield-liner channel,
+  #       -k dT/dr =  h_out (T - T_cool)
   - type: Robin
     region: shield_outer
-    h_conv: 38370.0       # W/(m2 K), h_out, neutral, G3 section 5
+    h_conv: 38370.0       # W/(m2 K), heat transfer coefficient h_out
     T_ext: 560.0          # K, coolant
 
   liner:
+  # - wetted surface (inner face of the liner): forced convection, the same shield-liner channel,
+  #       -k dT/dr = -h_out (T - T_cool)     with the shield in, h_out replaces h1
   - type: Robin
     region: wetted_surface
-    h_conv: 38370.0       # W/(m2 K), h_out: with the shield in, it replaces h1 here
+    h_conv: 38370.0       # W/(m2 K), heat transfer coefficient h_out
     T_ext: 560.0          # K, coolant
 
   steel:
+  # - vessel outer surface: insulation + natural convection in series,
+  #       -k dT/dr =  U2 (T - T_inf)         U2, global heat transfer coefficient, referred to r = Ro, outer radius of the vessel
   - type: Robin
     region: outer_radius
-    h_conv: 1.271         # W/(m2 K), U2, neutral, as in G3/G4
+    h_conv: 1.271         # W/(m2 K), heat transfer coefficient U2
     T_ext: 320.0          # K, containment water
+
+  # Top and bottom are left adiabatic (the default): the temperature field is radial.
+  # The coolant is not meshed and is at one temperature: shield and vessel exchange no heat.

@@ -1,9 +1,5 @@
 # --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
-# Z3ST teaching case: the lined, gamma-heated wall of G4, THERMO-MECHANICAL
-#
-# The case G4_lined_wall_thermal with the mechanics switched on: the same geometry, materials
-# and thermal conditions, plus internal pressure, the closed-end axial load and an axial
-# restraint. Exactly the step a group takes in G5 with its own G4 case.
+# Z3ST teaching case: lined, gamma-heated wall
 # --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. --- --.. ..- .-.. .-.. ---
 
 mesh_path: mesh.msh
