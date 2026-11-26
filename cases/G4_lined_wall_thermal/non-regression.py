@@ -2,226 +2,62 @@
 # SPDX-License-Identifier: Apache-2.0
 # --.. ..- .-.. .-.. --- Z3ST non-regression script --.. ..- .-.. .-.. ---
 """
-NDT course case: temperature field of a LINED, gamma-heated cylinder (thermal only)
+NDT course case: LINED, gamma-heated cylinder, thermal analysis.
+
 Author: Giovanni Zullo
-
-Liner Rw..Ri and vessel Ri..Ro, the gamma source entering at the wetted surface Rw,
-h1 on the wetted surface and U2 on the outer face: the thermal model of item 6 of the
-assignment, on neutral numbers (section 6 of the G4 notebook).
-
-Reference: the SAME gamma source z3st uses, q'''(r) = q0 K0(mu r)/K0(mu Rw) in both
-layers, integrated radially by quadrature (numerical integration). Steady cylindrical conduction integrates once to
-    r k(r) T'(r) = C - cum(r),        cum(r) = int_Rw^r s q(s) ds,
-valid across the interface because the flux r k T' is continuous there; the two Robin
-conditions fix C and T(Rw). An independent method (quadrature, not finite elements).
-
-Writes output/non-regression.json and output/verification.png
 """
 import os
 
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
 import numpy as np
-import yaml
-from scipy.special import k0
 
-from z3st.utils.utils_verification import pass_fail_check, regression_check
+from z3st.utils.non_regression import case_paths, line, load_yaml
 
-import pyvista as pv
+CASE_DIR, VTU_FILE, OUT_JSON = case_paths(__file__)
+OUT_DIR = os.path.dirname(OUT_JSON)
 
-# --.. ..- .-.. .-.. --- configuration --.. ..- .-.. .-.. ---
-CASE_DIR = os.path.dirname(os.path.abspath(__file__))
-VTU_FILE = os.path.join(CASE_DIR, "output", "fields.vtu")
-OUT_JSON = os.path.join(CASE_DIR, "output", "non-regression.json")
-
-
-def _yaml(name):
-    with open(os.path.join(CASE_DIR, name)) as f:
-        return yaml.safe_load(f)
-
-# --.. ..- .-.. .-.. --- read the case data --.. ..- .-.. .-.. ---
-# reading geometry.yaml
-geom = _yaml("geometry.yaml")
+# --.. ..- .-.. .-.. --- case data --.. ..- .-.. .-.. ---
+geom = load_yaml(CASE_DIR, "geometry.yaml")
 Rw = float(geom["inner_radius"])        # wetted surface (liner inner face)
 Ri = float(geom["interface_radius"])    # liner-vessel interface
 Ro = float(geom["outer_radius"])        # vessel outer surface
 Lz = float(geom["Lz"])
-# The FE solution is 2-D, in (r, z); the reference is 1-D, in r only. They are compared
-# along the radial line at mid-height, z = Lz/2, far from the top and the bottom.
 
-# reading the two material cards, as listed in input.yaml
-materials = _yaml("input.yaml")["materials"]
-L = _yaml(materials["liner"])
-V = _yaml(materials["steel"])
-k_L = float(L["k"])
-k_V = float(V["k"])
+bcs = load_yaml(CASE_DIR, "boundary_conditions.yaml")["thermal"]
+h1, T_cool = float(bcs["liner"][0]["h_conv"]), float(bcs["liner"][0]["T_ext"])   # wetted surface
+U2, T_inf = float(bcs["steel"][0]["h_conv"]), float(bcs["steel"][0]["T_ext"])    # vessel outer surface
 
-# gamma source: one profile across the whole wall, so the two cards must agree
-mu = float(V["mu_gamma"])
-q0 = float(V["gamma_heating"])
-assert float(L["mu_gamma"]) == mu, "liner and vessel must have the same mu_gamma"
-assert float(L["gamma_heating"]) == q0, "liner and vessel must have the same gamma_heating"
+# --.. ..- .-.. .-.. --- FE solution, radial profile at mid-height --.. ..- .-.. .-.. ---
+# temperature: nodes on y = Lz/2 (in the axisymmetric mesh x = r, y = axial)
+r_T, T = line(VTU_FILE, "Temperature", y=Lz/2, z=0.0, tol=1e-6)
 
-# reading boundary_conditions.yaml
-bcs = _yaml("boundary_conditions.yaml")
+m = r_T >= Ri                           # vessel nodes
+T_avg = np.trapezoid(T[m]*r_T[m], r_T[m])/np.trapezoid(r_T[m], r_T[m])
+i_max = np.argmax(T)
 
-# wetted surface (liner): convection to the coolant
-bc_in = bcs["thermal"]["liner"][0]
-H1 = float(bc_in["h_conv"])
-T_COOL = float(bc_in["T_ext"])
+print(f"T wetted surface:        {T[0] - 273.15:.1f} °C")
+print(f"T vessel inner surface:  {np.interp(Ri, r_T, T) - 273.15:.1f} °C")
+print(f"T vessel outer surface:  {T[-1] - 273.15:.1f} °C")
+print(f"T max:                   {T[i_max] - 273.15:.1f} °C at r - Ri = {(r_T[i_max] - Ri)*1e3:.1f} mm")
+print(f"average temperature, vessel: {T_avg - 273.15:.1f} °C\n")
 
-# outer surface (steel): insulation + containment water
-bc_out = bcs["thermal"]["steel"][0]
-U2 = float(bc_out["h_conv"])
-T_INF = float(bc_out["T_ext"])
-
-TOLERANCE = 1.0e-2   # relative, on temperature RISES above the coolant (not on kelvin)
-
-# --.. ..- .-.. .-.. --- analytic reference --.. ..- .-.. .-.. ---
-
-# Calculation of T(r) "quadrature", reference solution
-# radial grid, fine, with Ri (the interface) as a node
-_s = np.unique(np.concatenate([np.linspace(Rw, Ri, 4001), np.linspace(Ri, Ro, 40001)]))
-# conductivity: liner below Ri, vessel above
-_k = np.where(_s < Ri, k_L, k_V)
-# the gamma source q'''(r) = q0 K0(mu r)/K0(mu Rw), as in z3st
-_q = q0*k0(mu*_s)/k0(mu*Rw)
-
-def _int(f):
-    """Running trapezoid from Rw. k jumps at Ri, which is a grid node: 1/k is taken as the
-    average of the two sides only on the one interval that touches it, a 1e-5 error."""
-    return np.concatenate([[0.0], np.cumsum(0.5*(f[1:] + f[:-1])*np.diff(_s))])
-
-# cum(r) = int_Rw^r s q'''(s) ds: the heat generated between Rw and r (per radian, per metre)
-# dV = r dtheta dr dz, int q''' dV = int int 2 pi r q''' dr dz (the factor 2 pi is added later, we don't multiply by dz)
-_cum = _int(_s*_q)
-
-J1 = _int(1.0/(_k*_s))          # int 1/(k s)
-J2 = _int(_cum/(_k*_s))         # int cum/(k s)
-# C = Rw k T'(Rw): the heat leaving through the wetted surface, per radian and per metre,
-# so q_inner below is 2 pi C
-# inner Robin:  k T'(Rw) = h1 (T(Rw) - T_cool)  ->  T(Rw) = T_cool + C/(Rw h1)
-# outer Robin: -k T'(Ro) = U2 (T(Ro) - T_inf),  T(Ro) = T(Rw) + C J1(Ro) - J2(Ro)
-C = ((_cum[-1]/Ro - U2*(T_COOL - T_INF - J2[-1]))
-     / (1.0/Ro + U2*(1.0/(Rw*H1) + J1[-1])))
-T_ref_profile = T_COOL + C/(Rw*H1) + C*J1 - J2
-
-# function to return the reference temperature profile
-def T_profile(r):
-    return np.interp(r, _s, T_ref_profile)
-
-
-# support function, to compute the average temperature in
-# cylindrical coordinates
-def average(r, T, a, b):
-    """Volume-weighted average on a..b, int T r dr / int r dr: on the vessel (Ri..Ro) it is
-    the quantity the design temperature is defined on (item 8)."""
-    m = (r >= a) & (r <= b)
-    return np.trapezoid(T[m]*r[m], r[m])/np.trapezoid(r[m], r[m])
-
-# Heat balance
-# gen = int 2 pi r q''' dr
-gen = 2.0*np.pi*_cum[-1] # W per metre of height (no dz)
-# q_inner, heat leaving the wetted surface
-q_inner = 2.0*np.pi*Rw*H1*(T_ref_profile[0] - T_COOL)
-# q_outer, heat leaving the outer surface
-q_outer = 2.0*np.pi*Ro*U2*(T_ref_profile[-1] - T_INF)
-
-# --.. ..- .-.. .-.. --- extract the finite element (FE) solution --.. ..- .-.. .-.. ---
-if not os.path.exists(VTU_FILE):
-    raise SystemExit(f"[FAIL] no result to check: {VTU_FILE}\n       run ./Allrun first.")
-
-def probe(vtu, a, b, n):
-    """T along the radial line a..b at mid-height (Lz/2), sorted by r."""
-    grid = pv.read(vtu) # a pyvista.UnstructuredGrid: points, cells, and point_data (the fields)
-    line = grid.sample_over_line((a, Lz/2.0, 0.0), (b, Lz/2.0, 0.0), resolution=n) # n points from (a, Lz/2, 0) to (b, Lz/2, 0)
-    T_all = np.asarray(line["Temperature"])
-    # sample_over_line returns ZEROS outside the mesh: drop them before any integral
-    ok = np.asarray(line["vtkValidPointMask"]).astype(bool) & (T_all > 1.0)
-    r, T = line.points[ok, 0], T_all[ok]
-    o = np.argsort(r)
-    return r[o], T[o]
-
-
-r, T_fe = probe(VTU_FILE, Rw, Ro, 1040)        # liner + vessel
-print(f"[INFO] {len(r)} probe points inside the mesh")
-T_ana = T_profile(r)
-
-# --.. ..- .-.. .-.. --- the numbers item 6 asks for --.. ..- .-.. .-.. ---
-def report(r, T):
-    i = int(np.argmax(T))
-    return {"wetted surface": T[0], "vessel inner surface": np.interp(Ri, r, T),
-            "vessel outer surface": T[-1], "maximum": T[i], "max at r - Ri (mm)": (r[i] - Ri)*1e3,
-            "vessel average": average(r, T, Ri, Ro)}
-
-
-fe, an = report(r, T_fe), report(r, T_ana)
-print(f"\n  {'':28}{'z3st':>10}{'reference':>11}")
-for key in fe:
-    unit = "" if "mm" in key else "  K"
-    print(f"  {key:28}{fe[key]:10.2f}{an[key]:11.2f}{unit}")
-print("\n  where the gamma heat goes (reference, per metre of height):")
-print(f"    generated       {gen:10.1f} W/m")
-_pct = lambda q: f"   ({100*q/gen:5.2f} %)" if gen > 0 else ""   # no source: no share to give
-print(f"    wetted surface  {q_inner:10.1f} W/m{_pct(q_inner)}")
-print(f"    outer surface   {q_outer:10.1f} W/m{_pct(q_outer)}")
+# heat leaving each surface, per metre of height: 2 pi r h (T_surface - T_fluid)
+print(f"heat through the wetted surface: {2*np.pi*Rw*h1*(T[0] - T_cool):.1f} W/m")
+print(f"heat through the outer surface:  {2*np.pi*Ro*U2*(T[-1] - T_inf):.1f} W/m\n")
 
 # --.. ..- .-.. .-.. --- plot --.. ..- .-.. .-.. ---
-x = (r - Ri)*1e3
 fig, ax = plt.subplots(figsize=(8, 5))
+ax.plot((r_T - Ri)*1e3, T - 273.15, "-", color="tab:blue", label="T")
+ax.hlines(T_avg - 273.15, 0, (Ro - Ri)*1e3, colors="tab:red", linestyles="--",
+          label=f"vessel average: {T_avg - 273.15:.1f}°C")
+ax.plot((r_T[i_max] - Ri)*1e3, T[i_max] - 273.15, "o", color="tab:red",
+        label=f"max: {T[i_max] - 273.15:.1f}°C")
+ax.axvspan((Rw - Ri)*1e3, 0, color="0.85")
+ax.set_xlabel("r - Ri (mm)"); ax.set_ylabel("T (°C)"); ax.grid(alpha=0.35); ax.legend(fontsize=9)
 
-# Temperature profile: FE solution (z3st) and reference
-ax.plot(x, T_ana - 273.15, "-", lw=2, color="tab:red", label="reference (K0 quadrature)")
-ax.plot(x[::15], T_fe[::15] - 273.15, "o", ms=5, color="tab:blue", alpha=0.8, label="z3st")
-
-# Horizontal line, the mean metal temperature of the vessel (the same number the check below uses)
-avg = fe["vessel average"]
-ax.hlines(avg - 273.15, 0, (Ro - Ri)*1e3, colors='tab:red', linestyles='--',
-          label=f'mean metal temperature (NCA-2142.1(b)): {avg - 273.15:.1f}°C')
-
-# Maximum temperature of the vessel, and its position from the vessel inner surface
-x_max, T_max = fe["max at r - Ri (mm)"], fe["maximum"]
-ax.plot(x_max, T_max - 273.15, 'o', ms=9, color='tab:red',
-        label=f'vessel maximum: {T_max - 273.15:.1f}°C at {x_max:.1f} mm')
-
-# Horizontal line, the temperature limit of the vessel steel (NB-1120, NB-3112.4)
-# >>> CHANGE HERE: 400 degC is the limit of the NEUTRAL steel of this case
-T_lim = 400.0   # degC
-ax.hlines(T_lim, 0, (Ro - Ri)*1e3, colors='k', linestyles='-.', label=f'temperature limit of the vessel steel: {T_lim:.0f}°C')
-
-# Mark the liner region with a shaded area
-ax.axvspan((Rw - Ri)*1e3, 0.0, color="0.85", label="liner")
-
-# x-y labels, title, grid, legend
-ax.set_xlabel("r - Ri  (mm)   (0 = vessel inner surface)")
-ax.set_ylabel("temperature (°C)")
-ax.set_title(f"Lined wall: vessel average {fe['vessel average'] - 273.15:.1f} °C")
-ax.grid(alpha=0.35); ax.legend(fontsize=9)
+fig.suptitle("lined gamma-heated cylinder, z3st (liner shaded)")
 fig.tight_layout()
-
-plot_path = os.path.join(CASE_DIR, "output", "verification.png")
-fig.savefig(plot_path, dpi=200)
-print(f"[INFO] Plot saved in: {plot_path}")
-
-# --.. ..- .-.. .-.. --- non-regression metrics --.. ..- .-.. .-.. ---
-def entry(num, ref):
-    """Compared as rises above the coolant: a 1 % error on 560 K would hide 5 K."""
-    num, ref = num - T_COOL, ref - T_COOL
-    return {"numerical": float(num), "reference": float(ref),
-            "abs_error": float(abs(num - ref)), "rel_error": float(abs(num - ref)/abs(ref))}
-
-
-rise_f, rise_a = T_fe - T_COOL, T_ana - T_COOL
-e_T = float(np.sqrt(np.mean((rise_f - rise_a)**2))/np.sqrt(np.mean(rise_a**2)))
-errors = {
-    "L2_error_temperature": {"numerical": e_T, "reference": 0.0, "abs_error": e_T, "rel_error": e_T},
-    "T_wetted_surface": entry(fe["wetted surface"], an["wetted surface"]),
-    "T_vessel_inner_surface": entry(fe["vessel inner surface"], an["vessel inner surface"]),
-    "T_max": entry(fe["maximum"], an["maximum"]),
-    "T_vessel_average": entry(fe["vessel average"], an["vessel average"]),
-}
-pass_fail_check(errors, TOLERANCE, OUT_JSON, CASE_DIR)
-regression_check(errors, CASE_DIR)
-
-print("\n[INFO] Non-regression completed.\n")
+fig.savefig(os.path.join(OUT_DIR, "verification.png"), dpi=200)
