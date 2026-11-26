@@ -1,9 +1,6 @@
 name: steel_neutral
 
-# Generic vessel steel for the teaching case. NEUTRAL numbers, the same as the other cases.
-# gamma_heating is the value at the WETTED surface (geometry inner_radius), the reference of the
-# K0 profile for BOTH materials: with one mu the source is continuous across the interface,
-# and the vessel inner surface receives the attenuated value by itself.
+# Generic ferritic steel for the vessel
 
 E: 1.90e+11           # Young's modulus (Pa)
 nu: 0.30              # Poisson's ratio (-)
@@ -12,6 +9,20 @@ cp: 500.0             # Specific heat capacity (J/kg·K)
 alpha: 1.6e-5         # Thermal expansion coefficient (1/K)
 rho: 7900.0           # Density (kg/m³)
 T_ref: 560.0          # Reference (stress-free) temperature (K)
+
+# gamma heating (cyl) follows q''' = q'''0 * K0(mu r) / K0(mu R_ref)
+# R_ref = gamma_inner_radius, here below
+# if gamma_inner_radius is empty, it is taken from geometry.yaml as inner_radius
+
 mu_gamma: 27.0        # Gamma linear attenuation coefficient (1/m)
-gamma_heating: 1.734e+6 # W/m3 at the wetted surface: q0 = 2.6e6 attenuated by the shield, 2.6e6*exp(-27*0.015)
-                        # >>> CHANGE HERE: z3st does NOT attenuate from one body to the next
+# in our case, adjacent liner and steel with the same mu, the source is continuous across the interface
+
+# option (1)
+# gamma_heating: 1.734e+6 # W/m3 at the wetted surface of the liner, no gamma_inner_radius declared. inner_radius is used from geometry.yaml
+                        # >>> CHANGE HERE with your attenuated gamma_heating q'''0
+
+# option (2)
+gamma_heating: 1.546e+6 # W/m3 at the inner radius of the vessel
+                        # 1.546e+6 = 1.734e+6 * K0(mu Ri) / K0(mu * Rw)
+                        # >>> CHANGE HERE with your attenuated gamma_heating q'''0
+gamma_inner_radius: 0.300 # vessel inner radius where the attenuation starts (m)

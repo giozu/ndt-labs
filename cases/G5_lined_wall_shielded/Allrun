@@ -6,5 +6,4 @@ gmsh mesh.geo -2 -o mesh.msh > log_mesh.md
 echo "Solving..."
 python3 -m z3st > log_z3st.md
 tail -4 log_z3st.md
-echo "Self-check..."
 python3 non-regression.py
